@@ -72,6 +72,10 @@ lavat
 kitty
 matugen
 libxcb-cursor
+unzip
+unrar
+p7zip
+kdePackages.dolphin
 ];
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
