@@ -165,6 +165,13 @@ services.xserver = {
     #wireplumber.enable = true;
   };
 
+  # OpenGL + 32-bit GL (Steam's client is 32-bit and needs libGL/GLX,
+  # otherwise it aborts with "glXChooseVisual failed").
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users."eon" = {
     isNormalUser = true;
