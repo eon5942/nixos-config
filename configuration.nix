@@ -71,6 +71,7 @@ cava
 lavat
 kitty
 matugen
+libxcb-cursor
 ];
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
