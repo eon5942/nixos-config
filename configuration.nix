@@ -37,6 +37,42 @@ let
       platforms = pkgs.lib.platforms.unix;
     };
   };
+
+  # RPCS3 AppImage (newer than the nixpkgs 0.0.40 package). The AppImage's
+  # zstd squashfs can't be unpacked by unsquashfs, so we extract with the
+  # AppImage runtime's own --appimage-extract and wrap it in an FHS env.
+  rpcs3AppImage = let
+    rpcs3Extracted = pkgs.stdenvNoCC.mkDerivation {
+      name = "rpcs3-appimage-extracted";
+      src = pkgs.fetchurl {
+        url = "https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/build-726cd2d35885fe016a2ec45d8e972abdb6afa62f/rpcs3-v0.0.42-19988-726cd2d3_linux64.AppImage";
+        sha256 = "sha256-McCZ+9nBZt/pGstzsUzEuJ1asxc2XYYPLFgWLVcmtm4=";
+      };
+      sourceRoot = ".";
+      unpackPhase = ''
+        cp "$src" rpcs3.AppImage
+        chmod +x rpcs3.AppImage
+      '';
+      installPhase = ''
+        ./rpcs3.AppImage --appimage-extract
+        mkdir -p "$out"
+        cp -a AppDir/. "$out/"
+      '';
+    };
+  in pkgs.symlinkJoin {
+    name = "rpcs3-appimage";
+    paths = [
+      (pkgs.appimageTools.wrapAppImage {
+        name = "rpcs3";
+        src = rpcs3Extracted;
+      })
+    ];
+    postBuild = ''
+      mkdir -p "$out/share"
+      cp -a "${rpcs3Extracted}/usr/share/applications" "$out/share/"
+      cp -a "${rpcs3Extracted}/usr/share/icons" "$out/share/"
+    '';
+  };
 in
 {
 
@@ -45,7 +81,7 @@ ayugram-desktop
 steam
 vesktop
 spotify
-rpcs3
+rpcs3AppImage
 neovim
 wget
 curl
