@@ -163,8 +163,9 @@ services.xserver = {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
+  # new for the proprietary NVIDIA driver, which fails to compile against it.
+  boot.kernelPackages = pkgs.linuxPackages;
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -211,6 +212,23 @@ services.xserver = {
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+  };
+
+  # NVIDIA hybrid graphics (RTX 40-series). Nouveau has no working 3D
+  # acceleration on Ada Lovelace, which breaks Steam rendering. Use the
+  # proprietary driver with PRIME offload: Intel renders the desktop, the
+  # NVIDIA GPU is used on demand via `prime-run`.
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = false;
+    nvidiaSettings = true;
+    powerManagement.enable = true;
+    prime = {
+      offload.enable = true;
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
