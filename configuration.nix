@@ -73,6 +73,43 @@ let
       cp -a "${rpcs3Extracted}/usr/share/icons" "$out/share/"
     '';
   };
+
+  # chres: cycle a monitor through a list of resolutions using wlr-randr
+  # (wlroots output-management protocol, supported by dwl/mango). Runs from a
+  # keybind or the shell. Usage: chres [output-name] — defaults to the first
+  # enabled non-laptop output.
+  chres = pkgs.writeShellScriptBin "chres" ''
+    set -euo pipefail
+
+    MODES=(1920x1080 2560x1440 3840x2160 1280x720 1366x768)
+
+    output="''${1:-}"
+    state="$(wlr-randr --json)"
+
+    if [[ -z "$output" ]]; then
+      output="$(printf '%s' "$state" | jq -r '
+        [.[] | select((.enabled // "") | tostring == "true")] as $en
+        | (($en | map(select((.name // "") | startswith("eDP-") | not))[0]) // $en[0])
+        | .name // empty
+      ')"
+    fi
+
+    [[ -z "$output" ]] && { echo "chres: no enabled output found" >&2; exit 1; }
+
+    cur="$(printf '%s' "$state" | jq -r --arg o "$output" '
+      .[] | select(.name == $o)
+      | (.modes // []) | map(select((.current // "") | tostring == "true"))[0]
+      | "\(.width)x\(.height)"
+    ')"
+
+    idx=0
+    for i in "''${!MODES[@]}"; do
+      [[ "''${MODES[$i]}" == "$cur" ]] && idx=$(( (i + 1) % ''${#MODES[@]} ))
+    done
+
+    echo "chres: $output $cur -> ''${MODES[$idx]}"
+    wlr-randr --output "$output" --mode "''${MODES[$idx]}"
+  '';
 in
 {
 
@@ -113,6 +150,14 @@ unzip
 unrar
 p7zip
 kdePackages.dolphin
+audacity
+obs-studio
+wireplumber
+wlr-randr
+wdisplays
+brightnessctl
+jq
+chres
 ];
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
@@ -204,7 +249,7 @@ services.xserver = {
     alsa.support32Bit = true;
     pulse.enable = true;
     #jack.enable = true;
-    #wireplumber.enable = true;
+    wireplumber.enable = true;
   };
 
   # OpenGL + 32-bit GL (Steam's client is 32-bit and needs libGL/GLX,

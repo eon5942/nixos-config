@@ -83,6 +83,7 @@ static const enum libinput_config_tap_button_map button_map = LIBINPUT_CONFIG_TA
 static const char *termcmd[] = { "foot", NULL };
 static const char *menucmd[] = { "wofi", "--show", "drun", NULL };
 static const char *browsercmd[] = { "librewolf", NULL };
+static const char *displaycmd[] = { "wdisplays", NULL };
 
 static const Key keys[] = {
 	/* spawn terminal / launcher / browser */
@@ -99,6 +100,20 @@ static const Key keys[] = {
 	{ MODKEY,                    XKB_KEY_l,           spawn,            SHCMD("swaylock") },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Escape,      spawn,            SHCMD("powermenu") },
 	{ MODKEY,                    XKB_KEY_m,           quit,             {0} },
+
+	/* audio */
+	{ 0, XKB_KEY_XF86AudioRaiseVolume, spawn, SHCMD("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+") },
+	{ 0, XKB_KEY_XF86AudioLowerVolume, spawn, SHCMD("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-") },
+	{ 0, XKB_KEY_XF86AudioMute,        spawn, SHCMD("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle") },
+	{ 0, XKB_KEY_XF86AudioMicMute,     spawn, SHCMD("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle") },
+
+	/* brightness */
+	{ 0, XKB_KEY_XF86MonBrightnessUp,   spawn, SHCMD("brightnessctl set +5%") },
+	{ 0, XKB_KEY_XF86MonBrightnessDown, spawn, SHCMD("brightnessctl set 5%-") },
+
+	/* displays */
+	{ MODKEY,                    XKB_KEY_p,           spawn,            {.v = displaycmd} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_p,           spawn,            SHCMD("chres") },
 
 	/* window management */
 	{ WLR_MODIFIER_ALT,          XKB_KEY_q,           killclient,       {0} },
