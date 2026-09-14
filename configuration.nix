@@ -110,6 +110,28 @@ let
     echo "chres: $output $cur -> ''${MODES[$idx]}"
     wlr-randr --output "$output" --mode "''${MODES[$idx]}"
   '';
+
+  # Session entries for greetd/tuigreet. Mango is the default compositor;
+  # hit F3 at the login prompt to pick dwl instead.
+  mangoDesktop = pkgs.writeText "mango.desktop" ''
+    [Desktop Entry]
+    Name=Mango
+    Comment=mango WM
+    Exec=${config.programs.mango.package}/bin/mango
+    Type=Application
+  '';
+  dwlDesktop = pkgs.writeText "dwl.desktop" ''
+    [Desktop Entry]
+    Name=dwl
+    Comment=dwl WM
+    Exec=${dwlPackage}/bin/dwl
+    Type=Application
+  '';
+  sessionsDir = pkgs.runCommand "greetd-wayland-sessions" { } ''
+    mkdir -p "$out"
+    cp ${mangoDesktop} "$out/mango.desktop"
+    cp ${dwlDesktop} "$out/dwl.desktop"
+  '';
 in
 {
 
@@ -187,7 +209,7 @@ services.greetd = {
   settings = {
     default_session = {
       user = "greeter";
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --cmd ${dwlPackage}/bin/dwl";
+      command = "${pkgs.tuigreet}/bin/tuigreet --time --sessions ${sessionsDir} --cmd ${config.programs.mango.package}/bin/mango";
     };
   };
 };
