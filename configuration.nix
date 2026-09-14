@@ -107,6 +107,7 @@ cava
 lavat
 kitty
 matugen
+vscode
 libxcb-cursor
 unzip
 unrar
