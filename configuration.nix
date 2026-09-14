@@ -10,7 +10,10 @@ let
     }))}/bin/dwl -s "$HOME/.config/dwl/autostart"
   '';
 
-  # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs)
+  # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
+  # The Makefile compiles fetch.c -> fetch and installs to PREFIX/bin/fetch,
+  # so we just drive `make` (default build/install phases) like upstream's
+  # own nix/package.nix.
   fetchPackage = pkgs.stdenv.mkDerivation {
     pname = "fetch";
     version = "2.3.0";
@@ -21,11 +24,7 @@ let
       sha256 = "sha256-e9m8cqwbjERLbUl5508JqbOVv64HqAc6UMt8ezr/qcg=";
     };
     nativeBuildInputs = [ pkgs.makeWrapper ];
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 fetch $out/bin/fetch
-      runHook postInstall
-    '';
+    makeFlags = [ "PREFIX=${pkgs.lib.placeholder "out"}" ];
     postInstall = ''
       wrapProgram $out/bin/fetch --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.fastfetch pkgs.pciutils ]}
     '';
@@ -109,6 +108,12 @@ let
 
     echo "chres: $output $cur -> ''${MODES[$idx]}"
     wlr-randr --output "$output" --mode "''${MODES[$idx]}"
+
+    # Re-run the monitor layout so the laptop panel is re-placed edge-to-edge
+    # with the new resolution (never overlapping).
+    if [ -x "$HOME/.local/bin/monitor-layout" ]; then
+      "$HOME/.local/bin/monitor-layout"
+    fi
   '';
 
   # Session entries for greetd/tuigreet. Mango is the default compositor;
@@ -179,6 +184,10 @@ wlr-randr
 wdisplays
 brightnessctl
 jq
+socat
+playerctl
+swaylock
+pavucontrol
 chres
 ];
 
@@ -226,9 +235,17 @@ services.xserver = {
       ./hardware-configuration.nix
     ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
+  # Use the rEFInd EFI boot manager. systemd-boot is disabled since the two
+  # boot loaders cannot be enabled at the same time (boot.loader.id conflict).
+  boot.loader.systemd-boot.enable = false;
+  boot.loader.grub.enable = false;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.refind = {
+    enable = true;
+    # Keep the ESP from filling up: rEFInd copies the kernel + initrd of every
+    # NixOS generation onto the EFI system partition.
+    maxGenerations = 50;
+  };
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
   # new for the proprietary NVIDIA driver, which fails to compile against it.
