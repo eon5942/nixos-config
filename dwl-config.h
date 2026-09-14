@@ -41,10 +41,11 @@ static const Layout layouts[] = {
 /* monitors */
 static const MonitorRule monrules[] = {
 	/* name        mfact  nmaster scale layout       rotate/reflect                x     y
-	 * HDMI-A-1 (LG) is the primary monitor at the origin; eDP-1 (laptop panel)
-	 * sits to its right. Matches the mango monitorrule layout. */
+	 * HDMI-A-1 (AOC Q27G42ZE, 2560x1440 preferred) is the primary at the origin;
+	 * eDP-1 (laptop panel, 1920x1080) sits edge-to-edge to its right at x=2560,
+	 * so the outputs never overlap. */
 	{ "HDMI-A-1",  0.55f, 1,      1,    &layouts[0], WL_OUTPUT_TRANSFORM_NORMAL,   0,    0 },
-	{ "eDP-1",     0.55f, 1,      1,    &layouts[0], WL_OUTPUT_TRANSFORM_NORMAL,   1920, 0 },
+	{ "eDP-1",     0.55f, 1,      1,    &layouts[0], WL_OUTPUT_TRANSFORM_NORMAL,   2560, 0 },
 	/* default: autoconfigure anything else */
 	{ NULL,        0.55f, 1,      1,    &layouts[0], WL_OUTPUT_TRANSFORM_NORMAL,   -1,  -1 },
 };
