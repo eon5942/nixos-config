@@ -1,8 +1,8 @@
 diff --git a/dwl.c b/dwl.c
-index d59c25d..bc1da02 100644
+index 7c10419..7bdf3bb 100644
 --- a/dwl.c
 +++ b/dwl.c
-@@ -334,6 +334,7 @@ static void spawn(const Arg *arg);
+@@ -353,6 +353,7 @@ static void spawn(const Arg *arg);
  static void startdrag(struct wl_listener *listener, void *data);
  static void tag(const Arg *arg);
  static void tagmon(const Arg *arg);
@@ -10,8 +10,8 @@ index d59c25d..bc1da02 100644
  static void tile(Monitor *m);
  static void togglefloating(const Arg *arg);
  static void togglefullscreen(const Arg *arg);
-@@ -2754,6 +2755,70 @@ tile(Monitor *m)
- 	}
+@@ -2914,6 +2915,70 @@ togglegaps(const Arg *arg)
+ 	arrange(selmon);
  }
  
 +void

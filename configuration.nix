@@ -3,14 +3,21 @@
 let
   dwlPackage = pkgs.writeShellScriptBin "dwl" ''
     export PATH="/run/wrappers/bin:$PATH"
-    # The external HDMI output is on the NVIDIA GPU (PRIME offload). wlroots
-    # 0.19 negotiating DRM buffer modifiers makes the proprietary NVIDIA driver
-    # crash (NULL deref in nv_drm_framebuffer_create -> drm_mode_addfb2), so
-    # fall back to the legacy non-modifier path.
+    # wlroots 0.18+ dropped WLR_DRM_NO_MODIFIERS (it used to dodge an NVIDIA
+    # DRM modifier crash on the PRIME-offloaded output). Now a harmless no-op;
+    # left here in case the modifier path regresses on the NVIDIA driver.
     export WLR_DRM_NO_MODIFIERS=1
     exec ${((pkgs.dwl.override {
       configH = ./dwl-config.h;
+      wlroots_0_19 = pkgs.wlroots_0_20;
     }).overrideAttrs (old: {
+      version = "0.9-dev";
+      src = pkgs.fetchFromCodeberg {
+        owner = "dwl";
+        repo = "dwl";
+        rev = "433c325fb2a1d90b36206925fc429e354e248c99";
+        hash = "sha256-tnRaKlmIXiBCtaSh1XMy4EaelBzRAr1K0YzDGHWuy58=";
+      };
       patches = old.patches or [] ++ [ ./dwl-gaps.patch ./dwl-fair.patch ];
     }))}/bin/dwl -s "$HOME/.config/dwl/autostart"
   '';

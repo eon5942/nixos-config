@@ -11,6 +11,7 @@ static const int smartgaps                 = 1;  /* 1 means no outer gap when th
 static int gaps                            = 1;  /* 1 means gaps between windows are added */
 static const unsigned int gappx            = 8;  /* gap pixel between windows */
 static const unsigned int borderpx         = 2;  /* border pixel of windows */
+static const unsigned int snap             = 32; /* snap pixel */
 static const float rootcolor[]             = COLOR(0x000000ff);
 static const float bordercolor[]           = COLOR(0x333333ff);
 static const float focuscolor[]            = COLOR(0xffffffff);
@@ -179,4 +180,9 @@ static const Button buttons[] = {
 	{ MODKEY, BTN_LEFT,   moveresize,       {.ui = CurMove} },
 	{ 0,      BTN_MIDDLE, togglefullscreen, {0} },
 	{ MODKEY, BTN_RIGHT,  moveresize,       {.ui = CurResize} },
+};
+
+static const Axis axes[] = {
+	/* dwl requires at least one Axis entry; Super+scroll is a no-op here */
+	{ MODKEY, AxisUp, spawn, SHCMD("true") },
 };

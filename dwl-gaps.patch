@@ -1,8 +1,8 @@
 diff --git a/dwl.c b/dwl.c
-index dc0437e..dc851df 100644
+index a2418d0..7c10419 100644
 --- a/dwl.c
 +++ b/dwl.c
-@@ -199,6 +199,7 @@ struct Monitor {
+@@ -215,6 +215,7 @@ struct Monitor {
  	struct wlr_box w; /* window area, layout-relative */
  	struct wl_list layers[4]; /* LayerSurface.link */
  	const Layout *lt[2];
@@ -10,7 +10,7 @@ index dc0437e..dc851df 100644
  	unsigned int seltags;
  	unsigned int sellt;
  	uint32_t tagset[2];
-@@ -336,6 +337,7 @@ static void tagmon(const Arg *arg);
+@@ -355,6 +356,7 @@ static void tagmon(const Arg *arg);
  static void tile(Monitor *m);
  static void togglefloating(const Arg *arg);
  static void togglefullscreen(const Arg *arg);
@@ -18,16 +18,15 @@ index dc0437e..dc851df 100644
  static void toggletag(const Arg *arg);
  static void toggleview(const Arg *arg);
  static void unlocksession(struct wl_listener *listener, void *data);
-@@ -949,6 +951,8 @@ createmon(struct wl_listener *listener, void *data)
+@@ -1143,6 +1145,7 @@ createmon(struct wl_listener *listener, void *data)
  
  	wlr_output_state_init(&state);
  	/* Initialize monitor state using configured rules */
 +	m->gaps = gaps;
-+
  	m->tagset[0] = m->tagset[1] = 1;
  	for (r = monrules; r < END(monrules); r++) {
  		if (!r->name || strstr(wlr_output->name, r->name)) {
-@@ -2638,7 +2642,7 @@ tagmon(const Arg *arg)
+@@ -2866,7 +2869,7 @@ tagmon(const Arg *arg)
  void
  tile(Monitor *m)
  {
@@ -36,7 +35,7 @@ index dc0437e..dc851df 100644
  	int i, n = 0;
  	Client *c;
  
-@@ -2647,23 +2651,30 @@ tile(Monitor *m)
+@@ -2875,28 +2878,42 @@ tile(Monitor *m)
  			n++;
  	if (n == 0)
  		return;
@@ -74,8 +73,6 @@ index dc0437e..dc851df 100644
  		}
  		i++;
  	}
-@@ -2686,6 +2697,13 @@ togglefullscreen(const Arg *arg)
- 		setfullscreen(sel, !sel->isfullscreen);
  }
  
 +void
@@ -86,8 +83,5 @@ index dc0437e..dc851df 100644
 +}
 +
  void
- toggletag(const Arg *arg)
+ togglefloating(const Arg *arg)
  {
--- 
-2.45.2
-
