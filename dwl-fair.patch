@@ -1,0 +1,64 @@
+diff --git a/dwl.c b/dwl.c
+index d59c25d..432a377 100644
+--- a/dwl.c
++++ b/dwl.c
+@@ -334,6 +334,8 @@ static void spawn(const Arg *arg);
+ static void startdrag(struct wl_listener *listener, void *data);
+ static void tag(const Arg *arg);
+ static void tagmon(const Arg *arg);
++static void fair(Monitor *m);
++static void fairplace(Client *arr[], int start, int count, int vertical, struct wlr_box area);
+ static void tile(Monitor *m);
+ static void togglefloating(const Arg *arg);
+ static void togglefullscreen(const Arg *arg);
+@@ -2754,6 +2756,50 @@ tile(Monitor *m)
+ 	}
+ }
+ 
++void
++fairplace(Client *arr[], int start, int count, int vertical, struct wlr_box area)
++{
++	struct wlr_box a;
++
++	if (count <= 0)
++		return;
++	if (count == 1) {
++		resize(arr[start], area, 0);
++		return;
++	}
++
++	/* split the area in half; the leading client keeps one half, the
++	 * remaining clients recurse into the other half with the split axis
++	 * flipped, so every window is given a fair 50/50 share. */
++	a = area;
++	if (vertical) {
++		a.width /= 2;
++		resize(arr[start], a, 0);
++		area.x += a.width;
++		area.width -= a.width;
++	} else {
++		a.height /= 2;
++		resize(arr[start], a, 0);
++		area.y += a.height;
++		area.height -= a.height;
++	}
++	fairplace(arr, start + 1, count - 1, !vertical, area);
++}
++
++void
++fair(Monitor *m)
++{
++	Client *c, *arr[64];
++	int n = 0;
++
++	wl_list_for_each(c, &clients, link)
++		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen && n < (int)LENGTH(arr))
++			arr[n++] = c;
++	if (n == 0)
++		return;
++	fairplace(arr, 0, n, 1, m->w);
++}
++
+ void
+ togglefloating(const Arg *arg)
+ {

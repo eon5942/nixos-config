@@ -11,7 +11,7 @@ let
     exec ${((pkgs.dwl.override {
       configH = ./dwl-config.h;
     }).overrideAttrs (old: {
-      patches = old.patches or [] ++ [ ./dwl-gaps.patch ];
+      patches = old.patches or [] ++ [ ./dwl-gaps.patch ./dwl-fair.patch ];
     }))}/bin/dwl -s "$HOME/.config/dwl/autostart"
   '';
 

@@ -33,6 +33,7 @@ static const Rule rules[] = {
 /* layout(s) */
 static const Layout layouts[] = {
 	/* symbol     arrange function */
+	{ "[F]",      fair },    /* fair: recursive 50/50 binary split (Hyprland fair) */
 	{ "[]=",      tile },
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
@@ -132,9 +133,10 @@ static const Key keys[] = {
 	{ MODKEY,                    XKB_KEY_d,           incnmaster,       {.i = -1} },
 	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Return,      zoom,             {0} },
 	{ MODKEY,                    XKB_KEY_n,           setlayout,        {0} },
-	{ MODKEY,                    XKB_KEY_t,           setlayout,        {.v = &layouts[0]} },
-	{ MODKEY,                    XKB_KEY_f,           setlayout,        {.v = &layouts[1]} },
-	{ MODKEY,                    XKB_KEY_v,           setlayout,        {.v = &layouts[2]} },
+	{ MODKEY,                    XKB_KEY_y,           setlayout,        {.v = &layouts[0]} },
+	{ MODKEY,                    XKB_KEY_t,           setlayout,        {.v = &layouts[1]} },
+	{ MODKEY,                    XKB_KEY_f,           setlayout,        {.v = &layouts[2]} },
+	{ MODKEY,                    XKB_KEY_v,           setlayout,        {.v = &layouts[3]} },
 	{ MODKEY,                    XKB_KEY_g,           togglegaps,       {0} },
 
 	/* tags: Ctrl+N = view tag, Alt+N = move client to tag */
