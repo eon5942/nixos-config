@@ -1,62 +1,81 @@
 diff --git a/dwl.c b/dwl.c
-index d59c25d..432a377 100644
+index d59c25d..bc1da02 100644
 --- a/dwl.c
 +++ b/dwl.c
-@@ -334,6 +334,8 @@ static void spawn(const Arg *arg);
+@@ -334,6 +334,7 @@ static void spawn(const Arg *arg);
  static void startdrag(struct wl_listener *listener, void *data);
  static void tag(const Arg *arg);
  static void tagmon(const Arg *arg);
 +static void fair(Monitor *m);
-+static void fairplace(Client *arr[], int start, int count, int vertical, struct wlr_box area);
  static void tile(Monitor *m);
  static void togglefloating(const Arg *arg);
  static void togglefullscreen(const Arg *arg);
-@@ -2754,6 +2756,50 @@ tile(Monitor *m)
+@@ -2754,6 +2755,70 @@ tile(Monitor *m)
  	}
  }
  
 +void
-+fairplace(Client *arr[], int start, int count, int vertical, struct wlr_box area)
-+{
-+	struct wlr_box a;
-+
-+	if (count <= 0)
-+		return;
-+	if (count == 1) {
-+		resize(arr[start], area, 0);
-+		return;
-+	}
-+
-+	/* split the area in half; the leading client keeps one half, the
-+	 * remaining clients recurse into the other half with the split axis
-+	 * flipped, so every window is given a fair 50/50 share. */
-+	a = area;
-+	if (vertical) {
-+		a.width /= 2;
-+		resize(arr[start], a, 0);
-+		area.x += a.width;
-+		area.width -= a.width;
-+	} else {
-+		a.height /= 2;
-+		resize(arr[start], a, 0);
-+		area.y += a.height;
-+		area.height -= a.height;
-+	}
-+	fairplace(arr, start + 1, count - 1, !vertical, area);
-+}
-+
-+void
 +fair(Monitor *m)
 +{
 +	Client *c, *arr[64];
-+	int n = 0;
++	int col_x[64], col_w[64];
++	int i, n = 0, cols, base_rows, remainder, first_group_cols, first_group_count, max_rows;
++	int e = m->gaps, gap, x, availw, avail_h_base, avail_h_max, row_h_base, row_h_max;
 +
 +	wl_list_for_each(c, &clients, link)
 +		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen && n < (int)LENGTH(arr))
 +			arr[n++] = c;
 +	if (n == 0)
 +		return;
-+	fairplace(arr, 0, n, 1, m->w);
++	if (smartgaps && n == 1)
++		e = 0;
++	gap = gappx * e;
++
++	/* cols = ceil(sqrt(n)); windows fill column-major so the cells stay as
++	 * equal (square) as possible, like mango's "fair" grid layout. */
++	for (cols = 0; cols <= n; cols++)
++		if (cols * cols >= n)
++			break;
++	base_rows = n / cols;
++	remainder = n % cols;
++	first_group_cols = cols - remainder;
++	first_group_count = first_group_cols * base_rows;
++	max_rows = base_rows + (remainder > 0);
++
++	/* equal-width columns; the last column absorbs the rounding */
++	x = m->w.x + gap;
++	availw = m->w.width - 2 * gap - (cols - 1) * gap;
++	for (i = 0; i < cols; i++) {
++		col_x[i] = x;
++		col_w[i] = (i == cols - 1) ? m->w.x + m->w.width - gap - x : availw / cols;
++		x += col_w[i] + gap;
++	}
++
++	/* per-row height for the short (base_rows) and tall (max_rows) columns */
++	avail_h_base = m->w.height - 2 * gap - (base_rows - 1) * gap;
++	row_h_base = avail_h_base / base_rows;
++	avail_h_max = m->w.height - 2 * gap - (max_rows - 1) * gap;
++	row_h_max = avail_h_max / max_rows;
++
++	for (i = 0; i < n; i++) {
++		int col_idx, row_idx, cy, ch;
++		if (i < first_group_count) {
++			col_idx = i / base_rows;
++			row_idx = i % base_rows;
++			cy = m->w.y + gap + row_idx * (row_h_base + gap);
++			ch = (row_idx == base_rows - 1)
++				? m->w.y + m->w.height - gap - cy : row_h_base;
++		} else {
++			int off = i - first_group_count;
++			col_idx = first_group_cols + off / max_rows;
++			row_idx = off % max_rows;
++			cy = m->w.y + gap + row_idx * (row_h_max + gap);
++			ch = (row_idx == max_rows - 1)
++				? m->w.y + m->w.height - gap - cy : row_h_max;
++		}
++		resize(arr[i], (struct wlr_box){.x = col_x[col_idx], .y = cy,
++			.width = col_w[col_idx], .height = ch}, 0);
++	}
 +}
 +
  void

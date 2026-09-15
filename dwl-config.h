@@ -33,7 +33,7 @@ static const Rule rules[] = {
 /* layout(s) */
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ "[F]",      fair },    /* fair: recursive 50/50 binary split (Hyprland fair) */
+	{ "[F]",      fair },    /* fair: equal-as-possible grid (mango fair) */
 	{ "[]=",      tile },
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
