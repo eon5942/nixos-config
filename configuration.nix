@@ -287,17 +287,9 @@ services.xserver = {
       ./hardware-configuration.nix
     ];
 
-  # Use the rEFInd EFI boot manager. systemd-boot is disabled since the two
-  # boot loaders cannot be enabled at the same time (boot.loader.id conflict).
-  boot.loader.systemd-boot.enable = false;
-  boot.loader.grub.enable = false;
+  # Use the systemd-boot EFI boot loader.
+  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.refind = {
-    enable = true;
-    # Keep the ESP from filling up: rEFInd copies the kernel + initrd of every
-    # NixOS generation onto the EFI system partition.
-    maxGenerations = 50;
-  };
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
   # new for the proprietary NVIDIA driver, which fails to compile against it.
@@ -342,6 +334,26 @@ services.xserver = {
     #jack.enable = true;
     wireplumber.enable = true;
   };
+
+  # Screen capture (OBS, screenshots) in dwl via the wlroots desktop portal.
+  # mango's own NixOS module configures its portal; this does the same for dwl.
+  # GTK stays the fallback so file pickers keep working; only ScreenCast and
+  # Screenshot route to the wlr backend.
+  xdg.portal = {
+    enable = true;
+    wlr.enable = true;
+    config.dwl = {
+      default = [ "gtk" ];
+      "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
+      "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
+      "org.freedesktop.impl.portal.Inhibit" = [ ];
+    };
+  };
+
+  # dwl doesn't set XDG_CURRENT_DESKTOP itself (mango sets its own to "mango"),
+  # so provide it here so apps launched from dwl route to the config above.
+  environment.sessionVariables.XDG_CURRENT_DESKTOP = "dwl";
 
   # OpenGL + 32-bit GL (Steam's client is 32-bit and needs libGL/GLX,
   # otherwise it aborts with "glXChooseVisual failed").
