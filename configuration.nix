@@ -73,6 +73,57 @@ let
     '';
   };
 
+  # Mocktail: Roblox Player AppImage (github.com/komaruworld/mocktail).
+  # Wrapped with --appimage-extract-and-run so it runs without FUSE, and ships
+  # a .desktop entry + icon so it appears in launchers and handles roblox://
+  # URLs.
+  mocktailDesktopFile = pkgs.writeText "space.bigrat.mocktail.desktop" ''
+    [Desktop Entry]
+    Type=Application
+    Name=Mocktail
+    GenericName=Roblox Player
+    Comment=Play Roblox on Linux
+    Exec=mocktail %u
+    Icon=space.bigrat.mocktail
+    StartupWMClass=space.bigrat.mocktail
+    Categories=Game;
+    Terminal=false
+    MimeType=x-scheme-handler/roblox;x-scheme-handler/roblox-player;
+  '';
+  mocktailIconFile = pkgs.writeText "space.bigrat.mocktail.svg" ''
+    <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="96 96 320 320" fill="none">
+      <title>Mocktail</title>
+      <path d="M346.019 412.535L98.7423 346.277L165 99L412.277 165.258L346.019 412.535ZM230.378 212L211.743 281.547L281.289 300.182L299.924 230.635L230.378 212Z" fill="white"/>
+    </svg>
+  '';
+  mocktailPackage = pkgs.stdenv.mkDerivation {
+    pname = "mocktail";
+    version = "1.0.4";
+    src = pkgs.fetchurl {
+      url = "https://github.com/komaruworld/mocktail/releases/download/1.0.4/Mocktail-1.0.4-x86_64.AppImage";
+      sha256 = "1zjfnmn6s641dqz2avqjywxyq85yi2gn1d8b5xnl76w000xckw87";
+    };
+    dontUnpack = true;
+    dontFixup = true;
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 $src $out/libexec/mocktail.AppImage
+      makeWrapper $out/libexec/mocktail.AppImage $out/bin/mocktail \
+        --add-flags "--appimage-extract-and-run"
+      install -Dm644 ${mocktailDesktopFile} $out/share/applications/space.bigrat.mocktail.desktop
+      install -Dm644 ${mocktailIconFile} $out/share/icons/hicolor/scalable/apps/space.bigrat.mocktail.svg
+      runHook postInstall
+    '';
+    meta = with pkgs.lib; {
+      description = "Roblox Player for Linux";
+      homepage = "https://github.com/komaruworld/mocktail";
+      license = licenses.unfree;
+      mainProgram = "mocktail";
+      platforms = [ "x86_64-linux" ];
+    };
+  };
+
   # chres: cycle a monitor through a list of resolutions using wlr-randr
   # (wlroots output-management protocol, supported by dwl/mango). Runs from a
   # keybind or the shell. Usage: chres [output-name] — defaults to the first
@@ -146,6 +197,7 @@ steam
 vesktop
 spotify
 rpcs3AppImage
+mocktailPackage
 neovim
 wget
 curl
