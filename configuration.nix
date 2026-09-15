@@ -3,6 +3,11 @@
 let
   dwlPackage = pkgs.writeShellScriptBin "dwl" ''
     export PATH="/run/wrappers/bin:$PATH"
+    # The external HDMI output is on the NVIDIA GPU (PRIME offload). wlroots
+    # 0.19 negotiating DRM buffer modifiers makes the proprietary NVIDIA driver
+    # crash (NULL deref in nv_drm_framebuffer_create -> drm_mode_addfb2), so
+    # fall back to the legacy non-modifier path.
+    export WLR_DRM_NO_MODIFIERS=1
     exec ${((pkgs.dwl.override {
       configH = ./dwl-config.h;
     }).overrideAttrs (old: {
