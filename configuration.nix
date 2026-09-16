@@ -217,6 +217,14 @@ git
 # C compiler + tree-sitter CLI so nvim-treesitter can build parser grammars
 gcc
 tree-sitter
+# Formatters for conform.nvim (format-on-save in neovim)
+stylua
+black
+rustfmt
+clang-tools
+shfmt
+nixfmt
+prettier
 opencode
 nodejs_22
 fastfetch
