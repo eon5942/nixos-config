@@ -217,6 +217,10 @@ git
 # C compiler + tree-sitter CLI so nvim-treesitter can build parser grammars
 gcc
 tree-sitter
+# Rust toolchain
+cargo
+rustc
+clippy
 # Formatters for conform.nvim (format-on-save in neovim)
 stylua
 black
