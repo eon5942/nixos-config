@@ -240,7 +240,7 @@ libxcb-cursor
 unzip
 unrar
 p7zip
-kdePackages.dolphin
+yazi
 audacity
 obs-studio
 wireplumber
@@ -357,9 +357,22 @@ services.xserver = {
   # mango's own NixOS module configures its portal; this does the same for dwl.
   # GTK stays the fallback so file pickers keep working; only ScreenCast and
   # Screenshot route to the wlr backend.
+  #
+  # The screencast chooser is set to wofi explicitly: the portal runs as a
+  # systemd user service whose PATH does not include wofi/rofi/wmenu, so the
+  # built-in dmenu autodetection fails ("no output found") and screen sharing
+  # (Vesktop/OBS) breaks. Pointing chooser_cmd at an absolute path fixes it.
   xdg.portal = {
     enable = true;
-    wlr.enable = true;
+    wlr = {
+      enable = true;
+      settings = {
+        screencast = {
+          chooser_type = "dmenu";
+          chooser_cmd = "${pkgs.wofi}/bin/wofi -d -n --prompt='Select a source to share:'";
+        };
+      };
+    };
     config.dwl = {
       default = [ "gtk" ];
       "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
