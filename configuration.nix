@@ -214,6 +214,9 @@ neovim
 wget
 curl
 git
+# C compiler + tree-sitter CLI so nvim-treesitter can build parser grammars
+gcc
+tree-sitter
 opencode
 nodejs_22
 fastfetch
@@ -263,6 +266,11 @@ fonts.packages = [ pkgs.nerd-fonts.iosevka ];
   programs._1password-gui = {
     enable = true;
     };
+
+# Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
+# LSP servers like lua-language-server, rust-analyzer, clangd) find the Linux
+# dynamic loader at /lib64/ld-linux-x86-64.so.2 and actually run on NixOS.
+programs.nix-ld.enable = true;
 
 # dwl (minimal Wayland compositor). `-s` runs the autostart script after the
 # Wayland socket exists; the script bridges dwl's status output to
