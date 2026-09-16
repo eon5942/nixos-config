@@ -59,6 +59,29 @@ configuration, not user config.
   `rofi`, `waybar`, `cava`, `lavat`, `kitty`, `mako`, `matugen` — plus steam,
   spotify, vesktop, 1password, and more.
 
+## Rice profiles (before / after)
+
+The mango *rice* (how mango looks and is keymapped) does **not** live in this
+repo — it's user config, tracked in the
+[`eon5942/eonsdotfiles`](https://github.com/eon5942/eonsdotfiles) dotfiles
+repo. `nixos-rebuild` builds the compositor and installs the package set
+(identical for both rices); the rice itself is switched with `dots`.
+
+| State    | Rice                                   | Command                                            |
+| -------- | -------------------------------------- | -------------------------------------------------- |
+| **before** | old mango rice (matugen/ore waybar)  | `dots config use mango && dots install`            |
+| **after**  | new mango rice (dwl monochrome look) | `dots config use mono  && dots install`            |
+
+The `mono` profile is the "port the dwl rice onto mango" result: square
+corners, black/white, 8px gaps, 2px borders, `grid` (fair) default layout,
+foot + wofi + mako, and the dwl keymap. The `mango` profile is the original
+themed setup. Both build the exact same NixOS system.
+
+So "rebuild before" = checkout/keep the `mango` dotfiles profile; "rebuild
+after" = switch the dotfiles profile to `mono`. There is no NixOS-side change
+between the two states — `nixos-rebuild switch --flake .#nixos` is a no-op
+either way.
+
 ## Setup on a new machine
 
 ```sh

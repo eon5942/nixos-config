@@ -252,6 +252,7 @@ socat
 playerctl
 swaylock
 pavucontrol
+qbittorrent
 chres
 ];
 
@@ -272,7 +273,12 @@ programs.dwl = {
 };
 
 # mango (full-featured Wayland compositor, dwl-based). Config lives at
-# ~/.config/mango/config.conf (from the dotfiles "base" group).
+# ~/.config/mango/config.conf, deployed from the dotfiles repo (eonsdotfiles)
+# by selecting a profile there:
+#   dots config use mango   -> old mango rice (matugen/ore waybar)
+#   dots config use mono    -> new rice (dwl monochrome look ported onto mango)
+# This NixOS module only builds/installs the compositor; it does not manage
+# the rice, so nixos-rebuild is identical for both states.
 programs.mango.enable = true;
 
 # Minimal TUI login (no KDE/Qt bloat).
