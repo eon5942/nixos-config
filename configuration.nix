@@ -418,7 +418,7 @@ services.xserver = {
   # NVIDIA hybrid graphics (RTX 40-series). Nouveau has no working 3D
   # acceleration on Ada Lovelace, which breaks Steam rendering. Use the
   # proprietary driver with PRIME offload: Intel renders the desktop, the
-  # NVIDIA GPU is used on demand via `prime-run`.
+  # NVIDIA GPU is used on demand via `nvidia-offload`.
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
     modesetting.enable = true;
@@ -427,6 +427,7 @@ services.xserver = {
     powerManagement.enable = true;
     prime = {
       offload.enable = true;
+      offload.enableOffloadCmd = true;
       intelBusId = "PCI:0:2:0";
       nvidiaBusId = "PCI:1:0:0";
     };
