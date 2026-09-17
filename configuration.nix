@@ -497,7 +497,8 @@ services.xserver = {
   # Decrypt committed age secrets (./secrets/*.age) at activation. The machine
   # has no SSH host key (sshd is off), so use eon's own ed25519 key to decrypt;
   # the same public key is the recipient that `secrets/eon-password.age` was
-  # encrypted to. Re-encrypt after changing the password:
+  # encrypted to (see secrets.nix). To change the password, run from the repo
+  # root:
   #   nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age
   age.identityPaths = [ "/home/eon/.ssh/id_ed25519" ];
   age.secrets."eon-password".file = ./secrets/eon-password.age;

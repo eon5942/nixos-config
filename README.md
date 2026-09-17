@@ -52,6 +52,7 @@ the system.
 | `dwl-config.h`               | dwl compile-time config (patched in at build)                   |
 | `dwl-gaps.patch`             | Gaps/smartgaps/togglegaps patch applied to dwl                  |
 | `secrets/*.age`              | age-encrypted secrets (agenix), decrypted at activation         |
+| `secrets.nix`                | recipient public keys the `agenix -e`/`-r` CLI re-encrypts to   |
 
 ## What's inside the system
 
@@ -175,7 +176,11 @@ note below).
 - **Secrets via agenix.** The `eon` password hash is encrypted at rest in
   `secrets/eon-password.age` (age, recipient = eon's SSH key) and decrypted to
   `/run/agenix/eon-password` at activation, where
-  `users.users.eon.hashedPasswordFile` reads it. To change it:
-  `nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age`.
+  `users.users.eon.hashedPasswordFile` reads it. To change it, from the repo
+  root (`secrets.nix` supplies the recipients):
+  ```sh
+  cd ~/nixos-config
+  nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age
+  ```
   Note the *plaintext* is still `123123` — pick a real password for anything
   that matters.
