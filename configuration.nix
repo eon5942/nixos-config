@@ -247,6 +247,7 @@ mako
 rofi
 waybar
 cava
+cmatrix
 lavat
 kitty
 matugen
@@ -265,6 +266,7 @@ brightnessctl
 jq
 socat
 playerctl
+python3
 swaylock
 pavucontrol
 qbittorrent
