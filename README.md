@@ -51,6 +51,7 @@ the system.
 | `hardware-configuration.nix` | Auto-generated machine config (disks, firmware, kernel modules) |
 | `dwl-config.h`               | dwl compile-time config (patched in at build)                   |
 | `dwl-gaps.patch`             | Gaps/smartgaps/togglegaps patch applied to dwl                  |
+| `secrets/*.age`              | age-encrypted secrets (agenix), decrypted at activation         |
 
 ## What's inside the system
 
@@ -171,7 +172,10 @@ note below).
 - **`mango` builds from source.** It's not in nixpkgs yet, so the first rebuild
   compiles `mango` + `scenefx` (a wlroots fork) locally — allow some time and
   CPU for that. Subsequent rebuilds reuse the cached result.
-- **Secrets are mostly out of scope.** The `eon` password is set declaratively
-  via `users.users.eon.hashedPassword`, but committing its hash is still weak for
-  a public repo (and the plaintext is `123123`). For real secrets, use
-  `sops-nix`/`agenix`.
+- **Secrets via agenix.** The `eon` password hash is encrypted at rest in
+  `secrets/eon-password.age` (age, recipient = eon's SSH key) and decrypted to
+  `/run/agenix/eon-password` at activation, where
+  `users.users.eon.hashedPasswordFile` reads it. To change it:
+  `nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age`.
+  Note the *plaintext* is still `123123` — pick a real password for anything
+  that matters.

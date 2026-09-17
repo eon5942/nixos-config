@@ -486,13 +486,21 @@ services.xserver = {
     EndSection
   '';
 
-  # Define a user account (password set declaratively below).
+  # Define a user account (password set declaratively via agenix below).
   users.users."eon" = {
     isNormalUser = true;
     description = "eon";
     extraGroups = [ "networkmanager" "wheel" ];
-    hashedPassword = "$6$ypjj/m1fdg1FSruE$N86KbW2SCqPZiTCQMjXO01y.WdWbDx9HFM36OKFvDRPpvL0Y1Bo2YMcNojpc4dg0nl9yzTzDpGmXHpOyJMj5P0";
+    hashedPasswordFile = config.age.secrets."eon-password".path;
   };
+
+  # Decrypt committed age secrets (./secrets/*.age) at activation. The machine
+  # has no SSH host key (sshd is off), so use eon's own ed25519 key to decrypt;
+  # the same public key is the recipient that `secrets/eon-password.age` was
+  # encrypted to. Re-encrypt after changing the password:
+  #   nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age
+  age.identityPaths = [ "/home/eon/.ssh/id_ed25519" ];
+  age.secrets."eon-password".file = ./secrets/eon-password.age;
 
   # Allow only the specific unfree packages this system needs, instead of
   # blanket `allowUnfree = true`, so a new unfree dependency is caught at build
