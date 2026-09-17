@@ -408,6 +408,15 @@ services.xserver = {
   # so provide it here so apps launched from dwl route to the config above.
   environment.sessionVariables.XDG_CURRENT_DESKTOP = "dwl";
 
+  # The HDMI port is wired directly to the NVIDIA dGPU (RTX 4060), while the
+  # laptop panel (eDP) is on Intel. wlroots defaults to the boot GPU (Intel) as
+  # primary, so the external monitor was fed by Intel-rendered frames copied
+  # across GPUs — slow, and it broke NVIDIA GLX/DRI3 for Steam/Proton
+  # ("failed to load driver: nvidia-drm"). List the NVIDIA card first so
+  # wlroots renders on the dGPU (direct output for HDMI; eDP gets a copy).
+  environment.sessionVariables.WLR_DRM_DEVICES =
+    "/dev/dri/by-path/pci-0000:01:00.0-card:/dev/dri/by-path/pci-0000:00:02.0-card";
+
   # OpenGL + 32-bit GL (Steam's client is 32-bit and needs libGL/GLX,
   # otherwise it aborts with "glXChooseVisual failed").
   hardware.graphics = {
