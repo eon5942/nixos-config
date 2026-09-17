@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "dotfiles": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789519540,
+        "narHash": "sha256-kB4bLkBO2hm0Ojk2yekstEfDZp5iskuzGKRqVwd62Vc=",
+        "owner": "eon5942",
+        "repo": "eonsdotfiles",
+        "rev": "d59b089734633b549469d94f4de00c76d03a1784",
+        "type": "github"
+      },
+      "original": {
+        "owner": "eon5942",
+        "repo": "eonsdotfiles",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -95,6 +111,7 @@
     },
     "root": {
       "inputs": {
+        "dotfiles": "dotfiles",
         "mango": "mango",
         "nixpkgs": "nixpkgs"
       }

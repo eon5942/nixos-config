@@ -6,26 +6,40 @@ reproduces the whole machine (packages, services, compositors, user, fonts,
 bootloader) down to the exact nixpkgs commit it was built from.
 
 This is intentionally a **separate repo from the dotfiles** — it holds system
-configuration, not user config.
+configuration, not user config. The dotfiles repo is still pulled in and *pinned*
+as the `dotfiles` flake input (below), so its exact commit is locked alongside
+the system.
 
 ## How it's reproducible
 
 - **`flake.nix`** declares the system as a single output
   (`nixosConfigurations.nixos`) built from `./configuration.nix`, plus the
-  `mango` compositor input.
+  `mango` compositor input and the `dotfiles` repo (a non-flake input, pinned
+  but not built).
 - **`flake.lock`** pins every input to an immutable commit: `nixpkgs`
   (`nixos-26.05`, currently `21a67dc470149f337cecafbe965d8d252a390518`),
-  `mango` (`mangowm/mango`, whose `nixpkgs` follows ours), `scenefx`,
-  `flake-parts`, etc. Rebuilds are byte-for-byte identical until you run
-  `nix flake update`.
+  `mango` (`mangowm/mango`, whose `nixpkgs` follows ours), `dotfiles`
+  (`eon5942/eonsdotfiles`), `scenefx`, `flake-parts`, etc. Rebuilds are
+  byte-for-byte identical until you run `nix flake update`.
 - **`configuration.nix`** is the whole system: packages, services, users,
   fonts, bootloader, timezone, the `dwl` and `mango` compositors, and
-  `doas`/`allowUnfree`.
+  `doas`/`allowUnfreePredicate`.
+- **`dotfiles` pinned** — the `dotfiles` flake input locks the dotfiles commit
+  in `flake.lock` and exposes it read-only at `/etc/nixos/dotfiles` (deployment
+  stays `dots install` from `~/.local/etc`).
 - **`hardware-configuration.nix`** captures machine-specific bits (btrfs
   subvolumes, disk UUIDs, kernel modules) and is imported by
   `configuration.nix`. Regenerate it on new hardware.
 - **`dwl-config.h` + `dwl-gaps.patch`** are local, self-contained sources the
   `dwl` compositor is compiled from — nothing external or mutable.
+- **`system.configurationRevision`** stamps the exact config commit into the
+  running system, so `nixos-version` reports which revision was built (a dirty
+  tree shows `<hash>-dirty`). Build via git (not `path:`) to populate it.
+- **`nix.channel.enable = false`** — no mutable `nixos` channel is installed, so
+  a bare `nixos-rebuild` (without `--flake`) can't silently build a channel that
+  has drifted from `flake.lock`.
+- **`hardware.enableRedistributableFirmware = true`** — firmware + Intel
+  microcode are pinned into the closure rather than depending on host state.
 
 ## Files
 
@@ -52,8 +66,8 @@ configuration, not user config.
 - **User** — `eon`, in `wheel` and `networkmanager`.
 - **Auth** — `sudo` disabled; `doas` for the `wheel` group.
 - **Fonts** — Iosevka Nerd Font (matches the dotfiles).
-- **Misc** — `allowUnfree = true`, latest kernel, systemd-boot, timezone
-  `America/Los_Angeles`, `stateVersion = "26.05"`.
+- **Misc** — `allowUnfreePredicate` (a fixed allowlist, not blanket), latest
+  kernel, systemd-boot, timezone `America/Los_Angeles`, `stateVersion = "26.05"`.
 - **Packages** — neovim, opencode, nodejs, librewolf, foot, wofi, yambar,
   grim/slurp/wl-clipboard, fastfetch/hyfetch, and the mango rice stack:
   `rofi`, `waybar`, `cava`, `lavat`, `kitty`, `mako`, `matugen` — plus steam,
@@ -93,7 +107,10 @@ echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.con
 # (new hardware only) regenerate the machine-specific config, then commit it
 # sudo nixos-generate-config --dir ~/nixos-config
 
-sudo nixos-rebuild switch --flake 'path:/home/eon/nixos-config#nixos'
+# (once) let root's git/libgit2 open this repo
+sudo git config --global --add safe.directory /home/eon/nixos-config
+
+sudo nixos-rebuild switch --flake '/home/eon/nixos-config#nixos'
 ```
 
 After that first rebuild, flakes are enabled *by the config itself*
@@ -108,45 +125,53 @@ manual `nix.conf` editing.
 cd ~/nixos-config
 
 # rebuild after editing configuration.nix
-doas nixos-rebuild switch --flake 'path:/home/eon/nixos-config#nixos'
+doas nixos-rebuild switch --flake '/home/eon/nixos-config#nixos'
 
 # check what a rebuild would do without applying it
-doas nixos-rebuild dry-build --flake 'path:/home/eon/nixos-config#nixos'
+doas nixos-rebuild dry-build --flake '/home/eon/nixos-config#nixos'
 
 # update all inputs (nixpkgs, mango, ...) to their latest commits
-nix flake update && doas nixos-rebuild switch --flake 'path:/home/eon/nixos-config#nixos'
+nix flake update && doas nixos-rebuild switch --flake '/home/eon/nixos-config#nixos'
 
 # garbage-collect old system generations
 doas nix-collect-garbage -d
 ```
 
-The `path:` prefix is deliberate — see the ownership gotcha below. `nixos-rebuild`
-defaults the `#attr` to the hostname (`nixos`), so `path:/home/eon/nixos-config`
-(no `#nixos`) also works.
+The bare path (no `path:` prefix) is deliberate: nix resolves it as
+`git+file://`, so only *committed* files are built and
+`system.configurationRevision` is stamped into the system (see the ownership
+note below).
 
 ## Gotchas
 
 - **Rebuilding as root hits a git ownership check.** A bare `--flake
   ~/nixos-config` is resolved as `git+file://`, and git/libgit2 refuses to open
   a repository not owned by the current user — so `doas nixos-rebuild --flake .`
-  fails with *"repository path … is not owned by current user"*. Two ways
-  around it:
-  - Use the `path:` ref (shown above) — it copies the directory straight from
-    the filesystem and never touches git, so there is no ownership check.
-  - Or trust the directory once: `doas git config --global --add safe.directory
-    /home/eon/nixos-config` and then `--flake ~/nixos-config#nixos` works as usual.
+  fails with *"repository path … is not owned by current user"*. Fix it once:
+
+  ```sh
+  doas git config --global --add safe.directory /home/eon/nixos-config
+  ```
+
+  If you'd rather not trust the directory for root, use the `path:` ref instead
+  (`--flake 'path:/home/eon/nixos-config#nixos'`) — it copies the directory
+  straight from the filesystem and never touches git. The trade-off is that
+  `path:` builds *untracked* files too and leaves `configurationRevision` unset.
 - **Flakes only see git-tracked files.** If you add/rename a file and the build
   says it can't find it, `git add` it first. `git status` should be clean before
   rebuilding.
 - **`hardware-configuration.nix` is machine-specific.** Commit it for *this*
   machine, but regenerate (`nixos-generate-config`) on genuinely different
   hardware — disk UUIDs, filesystems, and firmware differ.
-- **Unfree packages** (steam, spotify, 1password, …) need `allowUnfree = true`
-  and come from third-party sources, so they're the least reproducible part of
-  the build.
+- **Unfree packages** (steam, spotify, 1password, vscode, the NVIDIA driver, …)
+  come from third-party sources, so they're the least reproducible part of the
+  build. They're allowed via an explicit `allowUnfreePredicate` allowlist rather
+  than `allowUnfree = true`, so a new unfree dependency fails the build instead
+  of being silently accepted.
 - **`mango` builds from source.** It's not in nixpkgs yet, so the first rebuild
   compiles `mango` + `scenefx` (a wlroots fork) locally — allow some time and
   CPU for that. Subsequent rebuilds reuse the cached result.
-- **Secrets are out of scope.** The `eon` user's password is set with `passwd`
-  and is not tracked here; use `sops-nix`/`agenix` if you want that declarative
-  too.
+- **Secrets are mostly out of scope.** The `eon` password is set declaratively
+  via `users.users.eon.hashedPassword`, but committing its hash is still weak for
+  a public repo (and the plaintext is `123123`). For real secrets, use
+  `sops-nix`/`agenix`.

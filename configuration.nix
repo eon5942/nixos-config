@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, self, dotfiles, ... }:
 
 let
   dwlPackage = pkgs.writeShellScriptBin "dwl" ''
@@ -136,6 +136,24 @@ let
     };
   };
 
+  # Steam wrapped to always run on the NVIDIA dGPU (same env as `nvidia-offload`).
+  # The bundled Chromium (new Steam UI) otherwise probes the NVIDIA GPU through
+  # Mesa GLX, segfaults ("failed to load driver: nvidia-drm"), and falls back to
+  # software rendering, which makes the client feel sluggish. Wrapping the binary
+  # means the app-launcher .desktop entry (`Exec=steam %U`) picks it up unchanged.
+  steamNvidia = pkgs.symlinkJoin {
+    name = "steam-nvidia";
+    paths = [ pkgs.steam ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/steam" \
+        --set __NV_PRIME_RENDER_OFFLOAD 1 \
+        --set __NV_PRIME_RENDER_OFFLOAD_PROVIDER NVIDIA-G0 \
+        --set __GLX_VENDOR_LIBRARY_NAME nvidia \
+        --set __VK_LAYER_NV_optimus NVIDIA_only
+    '';
+  };
+
   # chres: cycle a monitor through a list of resolutions using wlr-randr
   # (wlroots output-management protocol, supported by dwl/mango). Runs from a
   # keybind or the shell. Usage: chres [output-name] — defaults to the first
@@ -205,7 +223,7 @@ in
 
 environment.systemPackages = with pkgs; [
 ayugram-desktop
-steam
+steamNvidia
 vesktop
 spotify
 rpcs3AppImage
@@ -408,14 +426,24 @@ services.xserver = {
   # so provide it here so apps launched from dwl route to the config above.
   environment.sessionVariables.XDG_CURRENT_DESKTOP = "dwl";
 
-  # The HDMI port is wired directly to the NVIDIA dGPU (RTX 4060), while the
-  # laptop panel (eDP) is on Intel. wlroots defaults to the boot GPU (Intel) as
-  # primary, so the external monitor was fed by Intel-rendered frames copied
-  # across GPUs — slow, and it broke NVIDIA GLX/DRI3 for Steam/Proton
-  # ("failed to load driver: nvidia-drm"). List the NVIDIA card first so
-  # wlroots renders on the dGPU (direct output for HDMI; eDP gets a copy).
-  environment.sessionVariables.WLR_DRM_DEVICES =
-    "/dev/dri/by-path/pci-0000:01:00.0-card:/dev/dri/by-path/pci-0000:00:02.0-card";
+  # Do NOT set WLR_DRM_DEVICES to list the NVIDIA card first. Making the dGPU
+  # the primary DRM device makes wlroots (dwl/mango) fail with
+  # "couldn't create backend" at boot, because the NVIDIA card has no connector
+  # wired to the panel and can't initialise as primary renderer. Leave it unset
+  # so wlroots auto-probes: Intel (boot GPU) is primary and drives eDP, NVIDIA
+  # is secondary and drives HDMI directly.
+  #
+  # For Steam/Proton games that need the dGPU, use the PRIME offload wrapper
+  # (configured below) instead of forcing the compositor onto NVIDIA:
+  #   nvidia-offload %command%
+  # This sets __NV_PRIME_RENDER_OFFLOAD=1 + __GLX_VENDOR_LIBRARY_NAME=nvidia,
+  # which fixes "failed to load driver: nvidia-drm" without breaking the WM.
+
+  # Include redistributable firmware + Intel CPU microcode in the closure so a
+  # rebuild from the flake yields the same firmware set regardless of the host's
+  # local firmware state (also enables intel microcode updates, which
+  # hardware-configuration.nix ties to this flag).
+  hardware.enableRedistributableFirmware = true;
 
   # OpenGL + 32-bit GL (Steam's client is 32-bit and needs libGL/GLX,
   # otherwise it aborts with "glXChooseVisual failed").
@@ -442,18 +470,63 @@ services.xserver = {
     };
   };
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Xwayland (launched by wlroots for dwl/mango) auto-detects the NVIDIA GPU but
+  # falls back to the "modesetting" driver (Mesa zink), which breaks NVIDIA PRIME
+  # render offload for GLX games ("glx: failed to create dri3 screen" /
+  # "failed to load driver: nvidia-drm"). This OutputClass makes Xwayland load the
+  # proprietary "nvidia" driver for the dGPU, so `nvidia-offload %command%`
+  # (__NV_PRIME_RENDER_OFFLOAD=1) works for Steam/Proton.
+  environment.etc."X11/xorg.conf.d/10-nvidia-offload.conf".text = ''
+    Section "OutputClass"
+      Identifier "nvidia"
+      MatchDriver "nvidia-drm"
+      Driver "nvidia"
+      Option "AllowEmptyInitialConfiguration"
+      ModulePath "${config.hardware.nvidia.package.bin}/lib/xorg/modules"
+    EndSection
+  '';
+
+  # Define a user account (password set declaratively below).
   users.users."eon" = {
     isNormalUser = true;
     description = "eon";
     extraGroups = [ "networkmanager" "wheel" ];
+    hashedPassword = "$6$ypjj/m1fdg1FSruE$N86KbW2SCqPZiTCQMjXO01y.WdWbDx9HFM36OKFvDRPpvL0Y1Bo2YMcNojpc4dg0nl9yzTzDpGmXHpOyJMj5P0";
   };
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+  # Allow only the specific unfree packages this system needs, instead of
+  # blanket `allowUnfree = true`, so a new unfree dependency is caught at build
+  # time rather than silently accepted.
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"           # client + Proton
+    "steam-unwrapped" # the unfree client payload behind `steam`
+    "spotify"
+    "vscode"
+    "unrar"
+    "nvidia-x11"            # proprietary NVIDIA driver (hardware.nvidia)
+    "nvidia-settings"       # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
+    "nvidia-kernel-modules" # driver kernel modules
+    "nvidia-firmware"       # GSP firmware
+    "1password"     # _1password-gui
+    "1password-cli" # _1password-cli
+    "mocktail"      # Roblox client (local derivation)
+  ];
 
   # Enable flakes + the new CLI, so this config itself builds via `nixos-rebuild --flake`.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  # Do not install a mutable `nixos` channel. Every input comes from flake.lock;
+  # a channel could drift independently of the lock and silently change what a
+  # bare `nixos-rebuild` (without `--flake`) would build.
+  nix.channel.enable = false;
+
+  # The dotfiles repo (github:eon5942/eonsdotfiles) is pinned as the `dotfiles`
+  # flake input (see flake.nix) and passed here via specialArgs, so its exact
+  # commit lives in flake.lock. The pinned source is exposed read-only at
+  # /etc/nixos/dotfiles for reference. Deployment stays `dots install` from
+  # ~/.local/etc — the `dots` tool reads that fixed source path, so the working
+  # copy there remains the editable source of truth.
+  environment.etc."nixos/dotfiles".source = dotfiles;
 
   # Replace sudo with doas (wheel group gets full access).
   security.sudo.enable = false;
@@ -465,6 +538,14 @@ services.xserver = {
       persist = true;
     }];
   };
+
+  # Stamp the exact config commit into the built system, so `nixos-version`
+  # reports which revision it was built from (empty/`unset` when built via the
+  # `path:` flake ref instead of git). A clean checkout -> full hash; a dirty
+  # tree -> `<hash>-dirty`, so you can tell at a glance whether uncommitted
+  # changes are in the running system.
+  system.configurationRevision =
+    self.rev or self.dirtyRev or self.shortRev or self.dirtyShortRev or "unset";
 
   system.stateVersion = "26.05"; # Did you read the comment?
 
