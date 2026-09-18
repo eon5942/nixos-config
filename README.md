@@ -60,6 +60,8 @@ the system.
 | `hardware-configuration.nix` | Auto-generated machine config (disks, firmware, kernel modules) |
 | `dwl-config.h`               | dwl compile-time config (patched in at build)                   |
 | `dwl-gaps.patch`             | Gaps/smartgaps/togglegaps patch applied to dwl                  |
+| `dwl-fair.patch`             | Fair layout patch applied to dwl                                |
+| `.gitignore`                 | Ignores local build artifacts (`result`, `.direnv/`, etc.)      |
 | `secrets/*.age`              | age-encrypted secrets (agenix), decrypted at activation         |
 | `secrets.nix`                | recipient public keys the `agenix -e`/`-r` CLI re-encrypts to   |
 
@@ -208,6 +210,11 @@ git add hardware-configuration.nix && git commit -m "hardware: regenerate hardwa
 - **Flakes only see git-tracked files.** If you add/rename a file and the build
   says it can't find it, `git add` it first. `git status` should be clean before
   rebuilding.
+- **`.gitignore` keeps the tree clean.** `nix build` / `nix develop` drop a
+  `result` symlink and direnv drops `.direnv/`; `.gitignore` hides these so
+  `git status` only ever shows real changes. Don't ignore anything the flake
+  actually needs to build — ignoring a file means `nixos-rebuild --flake` won't
+  see it either.
 - **`hardware-configuration.nix` is machine-specific.** Commit it for *this*
   machine, but regenerate (`nixos-generate-config`) on genuinely different
   hardware — disk UUIDs, filesystems, and firmware differ.

@@ -1,0 +1,13 @@
+# Nix build outputs (`nix build` / `nix develop`)
+result
+result-*
+
+# direnv
+.direnv/
+.envrc
+
+# editor / OS cruft
+*.swp
+*.swo
+*~
+.DS_Store
