@@ -246,6 +246,7 @@ wireplumber
 wlr-randr
 wdisplays
 brightnessctl
+efibootmgr
 jq
 socat
 playerctl
@@ -305,6 +306,9 @@ services.xserver = {
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  # Only keep the 10 most recent generations in the boot menu so it stays
+  # tidy (and the ESP doesn't fill up with old kernels).
+  boot.loader.systemd-boot.configurationLimit = 10;
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
   # new for the proprietary NVIDIA driver, which fails to compile against it.
