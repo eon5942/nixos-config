@@ -115,8 +115,9 @@ git clone git@github.com:eon5942/nixos-config.git ~/nixos-config
 # enable flakes once (only needed if nix.conf doesn't already have it)
 echo "experimental-features = nix-command flakes" | sudo tee -a /etc/nix/nix.conf
 
-# (new hardware only) regenerate the machine-specific config, then commit it
-# sudo nixos-generate-config --dir ~/nixos-config
+# (new hardware only) regenerate hardware-configuration.nix, then commit it
+# (see "Regenerating hardware-configuration.nix" below — don't point --dir
+#  straight at the repo, it would overwrite configuration.nix)
 
 # (once) let root's git/libgit2 open this repo
 sudo git config --global --add safe.directory /home/eon/nixos-config
@@ -152,6 +153,42 @@ The bare path (no `path:` prefix) is deliberate: nix resolves it as
 `git+file://`, so only *committed* files are built and
 `system.configurationRevision` is stamped into the system (see the ownership
 note below).
+
+## Regenerating `hardware-configuration.nix`
+
+`hardware-configuration.nix` is machine-specific (disk UUIDs, btrfs subvolumes,
+kernel modules, firmware) and is normally written once. Regenerate it when the
+hardware or disk layout changes — new drive, repartitioned disk, different
+laptop, etc.
+
+`nixos-generate-config` writes **both** `configuration.nix` and
+`hardware-configuration.nix` to a directory and **overwrites** whatever is
+already there, so never point `--dir` straight at this repo (it would replace
+your hand-written `configuration.nix` with an auto-generated skeleton). Use one
+of these instead:
+
+**A. Print just the hardware file and redirect it** (preferred — leaves
+`configuration.nix` untouched):
+
+```sh
+sudo nixos-generate-config --show-hardware-config > ~/nixos-config/hardware-configuration.nix
+```
+
+**B. Generate to a temp dir and copy the one file over:**
+
+```sh
+sudo nixos-generate-config --dir /tmp/nixos-gen
+cp /tmp/nixos-gen/hardware-configuration.nix ~/nixos-config/
+```
+
+Then review the diff and rebuild:
+
+```sh
+cd ~/nixos-config
+git diff hardware-configuration.nix
+doas nixos-rebuild switch --flake '/home/eon/nixos-config#nixos'
+git add hardware-configuration.nix && git commit -m "hardware: regenerate hardware-configuration.nix"
+```
 
 ## Gotchas
 
