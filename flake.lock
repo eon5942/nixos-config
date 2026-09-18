@@ -61,6 +61,40 @@
         "type": "github"
       }
     },
+    "dwl-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789507790,
+        "narHash": "sha256-tnRaKlmIXiBCtaSh1XMy4EaelBzRAr1K0YzDGHWuy58=",
+        "ref": "refs/heads/main",
+        "rev": "433c325fb2a1d90b36206925fc429e354e248c99",
+        "revCount": 1359,
+        "type": "git",
+        "url": "https://codeberg.org/dwl/dwl.git"
+      },
+      "original": {
+        "rev": "433c325fb2a1d90b36206925fc429e354e248c99",
+        "type": "git",
+        "url": "https://codeberg.org/dwl/dwl.git"
+      }
+    },
+    "fetch-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789248399,
+        "narHash": "sha256-e9m8cqwbjERLbUl5508JqbOVv64HqAc6UMt8ezr/qcg=",
+        "owner": "areofyl",
+        "repo": "fetch",
+        "rev": "b7d69a25afabc4c53d7444f4fc389c78f4763f1e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "areofyl",
+        "repo": "fetch",
+        "rev": "b7d69a25afabc4c53d7444f4fc389c78f4763f1e",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -179,6 +213,8 @@
       "inputs": {
         "agenix": "agenix",
         "dotfiles": "dotfiles",
+        "dwl-src": "dwl-src",
+        "fetch-src": "fetch-src",
         "mango": "mango",
         "nixpkgs": "nixpkgs"
       }

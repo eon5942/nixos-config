@@ -14,12 +14,14 @@ the system.
 
 - **`flake.nix`** declares the system as a single output
   (`nixosConfigurations.nixos`) built from `./configuration.nix`, plus the
-  `mango` compositor input and the `dotfiles` repo (a non-flake input, pinned
-  but not built).
+  `mango` compositor input, the `dotfiles` repo (a non-flake input, pinned but
+  not built), and the `dwl-src` / `fetch-src` source inputs (non-flake git
+  repos built from local config/patches).
 - **`flake.lock`** pins every input to an immutable commit: `nixpkgs`
   (`nixos-26.05`, currently `21a67dc470149f337cecafbe965d8d252a390518`),
   `mango` (`mangowm/mango`, whose `nixpkgs` follows ours), `dotfiles`
-  (`eon5942/eonsdotfiles`), `scenefx`, `flake-parts`, etc. Rebuilds are
+  (`eon5942/eonsdotfiles`), `dwl-src` (`codeberg.org/dwl/dwl`), `fetch-src`
+  (`areofyl/fetch`), `scenefx`, `flake-parts`, etc. Rebuilds are
   byte-for-byte identical until you run `nix flake update`.
 - **`configuration.nix`** is the whole system: packages, services, users,
   fonts, bootloader, timezone, the `dwl` and `mango` compositors, and
@@ -32,6 +34,13 @@ the system.
   `configuration.nix`. Regenerate it on new hardware.
 - **`dwl-config.h` + `dwl-gaps.patch`** are local, self-contained sources the
   `dwl` compositor is compiled from — nothing external or mutable.
+- **External source as flake inputs** — the `dwl` and `fetch` upstream repos
+  are pinned as non-flake `dwl-src` / `fetch-src` inputs (exact rev locked in
+  `flake.lock`), so no `fetchFromGitHub`/`fetchFromCodeberg` hashes hide inside
+  `configuration.nix`.
+- **AppImages stay `fetchurl`** — RPCS3 and Mocktail are raw binary release
+  artifacts, not git/tarball sources, so they can't be flake inputs; they're
+  still hash-pinned (`sha256`) and therefore reproducible.
 - **`system.configurationRevision`** stamps the exact config commit into the
   running system, so `nixos-version` reports which revision was built (a dirty
   tree shows `<hash>-dirty`). Build via git (not `path:`) to populate it.

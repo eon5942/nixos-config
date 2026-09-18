@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, ... }:
+{ config, lib, pkgs, self, dotfiles, dwl-src, fetch-src, ... }:
 
 let
   dwlPackage = pkgs.writeShellScriptBin "dwl" ''
@@ -12,29 +12,19 @@ let
       wlroots_0_19 = pkgs.wlroots_0_20;
     }).overrideAttrs (old: {
       version = "0.9-dev";
-      src = pkgs.fetchFromCodeberg {
-        owner = "dwl";
-        repo = "dwl";
-        rev = "433c325fb2a1d90b36206925fc429e354e248c99";
-        hash = "sha256-tnRaKlmIXiBCtaSh1XMy4EaelBzRAr1K0YzDGHWuy58=";
-      };
+      src = dwl-src; # pinned via the `dwl-src` flake input (see flake.nix)
       patches = old.patches or [] ++ [ ./dwl-gaps.patch ./dwl-fair.patch ];
     }))}/bin/dwl -s "$HOME/.config/dwl/autostart"
   '';
 
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
-  # The Makefile compiles fetch.c -> fetch and installs to PREFIX/bin/fetch,
-  # so we just drive `make` (default build/install phases) like upstream's
-  # own nix/package.nix.
+  # Source is pinned via the `fetch-src` flake input (see flake.nix). The
+  # Makefile compiles fetch.c -> fetch and installs to PREFIX/bin/fetch, so we
+  # just drive `make` (default build/install phases) like upstream's nix/package.nix.
   fetchPackage = pkgs.stdenv.mkDerivation {
     pname = "fetch";
     version = "2.3.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "areofyl";
-      repo = "fetch";
-      rev = "b7d69a25afabc4c53d7444f4fc389c78f4763f1e";
-      sha256 = "sha256-e9m8cqwbjERLbUl5508JqbOVv64HqAc6UMt8ezr/qcg=";
-    };
+    src = fetch-src;
     nativeBuildInputs = [ pkgs.makeWrapper ];
     makeFlags = [ "PREFIX=${pkgs.lib.placeholder "out"}" ];
     postInstall = ''
