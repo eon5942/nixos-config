@@ -68,8 +68,8 @@ the system.
 - **User** — `eon`, in `wheel` and `networkmanager`.
 - **Auth** — `sudo` disabled; `doas` for the `wheel` group.
 - **Fonts** — Iosevka Nerd Font (matches the dotfiles).
-- **Misc** — `allowUnfreePredicate` (a fixed allowlist, not blanket), latest
-  kernel, systemd-boot, timezone `America/Los_Angeles`, `stateVersion = "26.05"`.
+- **Misc** — `allowUnfreePredicate` (a fixed allowlist, not blanket), default
+  stable kernel, systemd-boot, timezone `America/Los_Angeles`, `stateVersion = "26.05"`.
 - **Packages** — neovim, opencode, nodejs, librewolf, foot, wofi, yambar,
   grim/slurp/wl-clipboard, fastfetch/hyfetch, and the mango rice stack:
   `rofi`, `waybar`, `cava`, `lavat`, `kitty`, `mako`, `matugen` — plus steam,
@@ -182,5 +182,5 @@ note below).
   cd ~/nixos-config
   nix run github:ryantm/agenix -- -i ~/.ssh/id_ed25519 -e secrets/eon-password.age
   ```
-  Note the *plaintext* is still `123123` — pick a real password for anything
-  that matters.
+  The hash is committed encrypted and never stored in plaintext — pick a real
+  password for anything that matters.

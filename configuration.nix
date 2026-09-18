@@ -293,11 +293,11 @@ chres
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
 fonts.packages = [ pkgs.nerd-fonts.iosevka ];
-#1password
- programs._1password.enable = true;
-  programs._1password-gui = {
-    enable = true;
-    };
+# 1password
+programs._1password.enable = true;
+programs._1password-gui = {
+  enable = true;
+};
 
 # Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
 # LSP servers like lua-language-server, rust-analyzer, clangd) find the Linux
