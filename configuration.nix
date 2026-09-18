@@ -1,22 +1,6 @@
-{ config, lib, pkgs, self, dotfiles, dwl-src, fetch-src, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, ... }:
 
 let
-  dwlPackage = pkgs.writeShellScriptBin "dwl" ''
-    export PATH="/run/wrappers/bin:$PATH"
-    # wlroots 0.18+ dropped WLR_DRM_NO_MODIFIERS (it used to dodge an NVIDIA
-    # DRM modifier crash on the PRIME-offloaded output). Now a harmless no-op;
-    # left here in case the modifier path regresses on the NVIDIA driver.
-    export WLR_DRM_NO_MODIFIERS=1
-    exec ${((pkgs.dwl.override {
-      configH = ./dwl-config.h;
-      wlroots_0_19 = pkgs.wlroots_0_20;
-    }).overrideAttrs (old: {
-      version = "0.9-dev";
-      src = dwl-src; # pinned via the `dwl-src` flake input (see flake.nix)
-      patches = old.patches or [] ++ [ ./dwl-gaps.patch ./dwl-fair.patch ];
-    }))}/bin/dwl -s "$HOME/.config/dwl/autostart"
-  '';
-
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
   # Source is pinned via the `fetch-src` flake input (see flake.nix). The
   # Makefile compiles fetch.c -> fetch and installs to PREFIX/bin/fetch, so we
@@ -145,7 +129,7 @@ let
   };
 
   # chres: cycle a monitor through a list of resolutions using wlr-randr
-  # (wlroots output-management protocol, supported by dwl/mango). Runs from a
+  # (wlroots output-management protocol, supported by mango). Runs from a
   # keybind or the shell. Usage: chres [output-name] — defaults to the first
   # enabled non-laptop output.
   chres = pkgs.writeShellScriptBin "chres" ''
@@ -187,8 +171,7 @@ let
     fi
   '';
 
-  # Session entries for greetd/tuigreet. Mango is the default compositor;
-  # hit F3 at the login prompt to pick dwl instead.
+  # Session entry for greetd/tuigreet. Mango is the only (default) compositor.
   mangoDesktop = pkgs.writeText "mango.desktop" ''
     [Desktop Entry]
     Name=Mango
@@ -196,17 +179,9 @@ let
     Exec=${config.programs.mango.package}/bin/mango
     Type=Application
   '';
-  dwlDesktop = pkgs.writeText "dwl.desktop" ''
-    [Desktop Entry]
-    Name=dwl
-    Comment=dwl WM
-    Exec=${dwlPackage}/bin/dwl
-    Type=Application
-  '';
   sessionsDir = pkgs.runCommand "greetd-wayland-sessions" { } ''
     mkdir -p "$out"
     cp ${mangoDesktop} "$out/mango.desktop"
-    cp ${dwlDesktop} "$out/dwl.desktop"
   '';
 in
 {
@@ -294,14 +269,6 @@ programs._1password-gui = {
 # dynamic loader at /lib64/ld-linux-x86-64.so.2 and actually run on NixOS.
 programs.nix-ld.enable = true;
 
-# dwl (minimal Wayland compositor). `-s` runs the autostart script after the
-# Wayland socket exists; the script bridges dwl's status output to
-# ~/.cache/dwltags for yambar's "dwl" module.
-programs.dwl = {
-  enable = true;
-  package = dwlPackage;
-};
-
 # mango (full-featured Wayland compositor, dwl-based). Config lives at
 # ~/.config/mango/config.conf, deployed from the dotfiles repo (eonsdotfiles)
 # by selecting a profile there:
@@ -383,10 +350,9 @@ services.xserver = {
     wireplumber.enable = true;
   };
 
-  # Screen capture (OBS, screenshots) in dwl via the wlroots desktop portal.
-  # mango's own NixOS module configures its portal; this does the same for dwl.
-  # GTK stays the fallback so file pickers keep working; only ScreenCast and
-  # Screenshot route to the wlr backend.
+  # Screen capture (OBS, screenshots) via the wlroots desktop portal. mango's
+  # own NixOS module configures its portal; the wlr backend here handles
+  # ScreenCast/Screenshot. GTK stays the fallback so file pickers keep working.
   #
   # The screencast chooser is set to wofi explicitly: the portal runs as a
   # systemd user service whose PATH does not include wofi/rofi/wmenu, so the
@@ -403,21 +369,10 @@ services.xserver = {
         };
       };
     };
-    config.dwl = {
-      default = [ "gtk" ];
-      "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
-      "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
-      "org.freedesktop.impl.portal.Inhibit" = [ ];
-    };
   };
 
-  # dwl doesn't set XDG_CURRENT_DESKTOP itself (mango sets its own to "mango"),
-  # so provide it here so apps launched from dwl route to the config above.
-  environment.sessionVariables.XDG_CURRENT_DESKTOP = "dwl";
-
   # Do NOT set WLR_DRM_DEVICES to list the NVIDIA card first. Making the dGPU
-  # the primary DRM device makes wlroots (dwl/mango) fail with
+  # the primary DRM device makes wlroots (mango) fail with
   # "couldn't create backend" at boot, because the NVIDIA card has no connector
   # wired to the panel and can't initialise as primary renderer. Leave it unset
   # so wlroots auto-probes: Intel (boot GPU) is primary and drives eDP, NVIDIA
@@ -460,7 +415,7 @@ services.xserver = {
     };
   };
 
-  # Xwayland (launched by wlroots for dwl/mango) auto-detects the NVIDIA GPU but
+  # Xwayland (launched by wlroots for mango) auto-detects the NVIDIA GPU but
   # falls back to the "modesetting" driver (Mesa zink), which breaks NVIDIA PRIME
   # render offload for GLX games ("glx: failed to create dri3 screen" /
   # "failed to load driver: nvidia-drm"). This OutputClass makes Xwayland load the

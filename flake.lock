@@ -61,23 +61,6 @@
         "type": "github"
       }
     },
-    "dwl-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789507790,
-        "narHash": "sha256-tnRaKlmIXiBCtaSh1XMy4EaelBzRAr1K0YzDGHWuy58=",
-        "ref": "refs/heads/main",
-        "rev": "433c325fb2a1d90b36206925fc429e354e248c99",
-        "revCount": 1359,
-        "type": "git",
-        "url": "https://codeberg.org/dwl/dwl.git"
-      },
-      "original": {
-        "rev": "433c325fb2a1d90b36206925fc429e354e248c99",
-        "type": "git",
-        "url": "https://codeberg.org/dwl/dwl.git"
-      }
-    },
     "fetch-src": {
       "flake": false,
       "locked": {
@@ -213,7 +196,6 @@
       "inputs": {
         "agenix": "agenix",
         "dotfiles": "dotfiles",
-        "dwl-src": "dwl-src",
         "fetch-src": "fetch-src",
         "mango": "mango",
         "nixpkgs": "nixpkgs"

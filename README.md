@@ -15,16 +15,16 @@ the system.
 - **`flake.nix`** declares the system as a single output
   (`nixosConfigurations.nixos`) built from `./configuration.nix`, plus the
   `mango` compositor input, the `dotfiles` repo (a non-flake input, pinned but
-  not built), and the `dwl-src` / `fetch-src` source inputs (non-flake git
-  repos built from local config/patches).
+  not built), and the `fetch-src` source input (a non-flake git repo built from
+  its own Makefile).
 - **`flake.lock`** pins every input to an immutable commit: `nixpkgs`
   (`nixos-26.05`, currently `21a67dc470149f337cecafbe965d8d252a390518`),
   `mango` (`mangowm/mango`, whose `nixpkgs` follows ours), `dotfiles`
-  (`eon5942/eonsdotfiles`), `dwl-src` (`codeberg.org/dwl/dwl`), `fetch-src`
-  (`areofyl/fetch`), `scenefx`, `flake-parts`, etc. Rebuilds are
-  byte-for-byte identical until you run `nix flake update`.
+  (`eon5942/eonsdotfiles`), `fetch-src` (`areofyl/fetch`), `scenefx`,
+  `flake-parts`, etc. Rebuilds are byte-for-byte identical until you run
+  `nix flake update`.
 - **`configuration.nix`** is the whole system: packages, services, users,
-  fonts, bootloader, timezone, the `dwl` and `mango` compositors, and
+  fonts, bootloader, timezone, the `mango` compositor, and
   `doas`/`allowUnfreePredicate`.
 - **`dotfiles` pinned** — the `dotfiles` flake input locks the dotfiles commit
   in `flake.lock` and exposes it read-only at `/etc/nixos/dotfiles` (deployment
@@ -32,12 +32,9 @@ the system.
 - **`hardware-configuration.nix`** captures machine-specific bits (btrfs
   subvolumes, disk UUIDs, kernel modules) and is imported by
   `configuration.nix`. Regenerate it on new hardware.
-- **`dwl-config.h` + `dwl-gaps.patch`** are local, self-contained sources the
-  `dwl` compositor is compiled from — nothing external or mutable.
-- **External source as flake inputs** — the `dwl` and `fetch` upstream repos
-  are pinned as non-flake `dwl-src` / `fetch-src` inputs (exact rev locked in
-  `flake.lock`), so no `fetchFromGitHub`/`fetchFromCodeberg` hashes hide inside
-  `configuration.nix`.
+- **External source as a flake input** — the `fetch` upstream repo is pinned
+  as the non-flake `fetch-src` input (exact rev locked in `flake.lock`), so no
+  `fetchFromGitHub` hash hides inside `configuration.nix`.
 - **AppImages stay `fetchurl`** — RPCS3 and Mocktail are raw binary release
   artifacts, not git/tarball sources, so they can't be flake inputs; they're
   still hash-pinned (`sha256`) and therefore reproducible.
@@ -58,21 +55,16 @@ the system.
 | `flake.lock`                 | Pins all inputs to exact commits (do not edit by hand)          |
 | `configuration.nix`          | The entire system definition                                     |
 | `hardware-configuration.nix` | Auto-generated machine config (disks, firmware, kernel modules) |
-| `dwl-config.h`               | dwl compile-time config (patched in at build)                   |
-| `dwl-gaps.patch`             | Gaps/smartgaps/togglegaps patch applied to dwl                  |
-| `dwl-fair.patch`             | Fair layout patch applied to dwl                                |
 | `.gitignore`                 | Ignores local build artifacts (`result`, `.direnv/`, etc.)      |
 | `secrets/*.age`              | age-encrypted secrets (agenix), decrypted at activation         |
 | `secrets.nix`                | recipient public keys the `agenix -e`/`-r` CLI re-encrypts to   |
 
 ## What's inside the system
 
-- **Compositors**
-  - `dwl` (built from `dwl-config.h` + the gaps patch), launched from
-    `greetd` + `tuigreet` (minimal TUI login) via
-    `dwl -s ~/.config/dwl/autostart`.
-  - `mango` (`mangowm/mango`), a full-featured dwl-based compositor, via its
-    upstream flake + `programs.mango` NixOS module. Config lives at
+- **Compositor**
+  - `mango` (`mangowm/mango`), a full-featured dwl-based Wayland compositor,
+    launched from `greetd` + `tuigreet` (minimal TUI login), via its upstream
+    flake + `programs.mango` NixOS module. Config lives at
     `~/.config/mango/config.conf` (from the dotfiles).
 - **X11 fallback** — Window Maker via `startx`.
 - **Sound** — PipeWire (`alsa` + `pulse` compatibility).

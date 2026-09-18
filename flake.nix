@@ -23,27 +23,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # dwl Wayland compositor source (hosted on Codeberg, not a flake). Pinned
-    # to an exact rev and built from ./dwl-config.h + the local gaps/fair
-    # patches. A flake input keeps its commit in flake.lock alongside every
-    # other dependency instead of hiding it inside configuration.nix.
-    dwl-src = {
-      url = "git+https://codeberg.org/dwl/dwl.git?rev=433c325fb2a1d90b36206925fc429e354e248c99";
-      flake = false;
-    };
-
     # areofyl/fetch source (animated 3D fetch tool, not yet in nixpkgs).
-    # Pinned as a flake input for the same reason as dwl-src.
+    # Pinned as a flake input so its commit lives in flake.lock instead of
+    # hiding inside configuration.nix.
     fetch-src = {
       url = "github:areofyl/fetch/b7d69a25afabc4c53d7444f4fc389c78f4763f1e";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, agenix, mango, dotfiles, dwl-src, fetch-src, ... }: {
+  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, ... }: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit self dotfiles dwl-src fetch-src; };
+      specialArgs = { inherit self dotfiles fetch-src; };
       modules = [
         agenix.nixosModules.default
         mango.nixosModules.mango
