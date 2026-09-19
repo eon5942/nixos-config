@@ -189,6 +189,7 @@ in
 environment.systemPackages = with pkgs; [
 ayugram-desktop
 steamNvidia
+wineWow64Packages.full
 vesktop
 spotify
 rpcs3AppImage
