@@ -192,6 +192,7 @@ steamNvidia
 wineWow64Packages.full
 vesktop
 spotify
+vlc
 rpcs3AppImage
 mocktailPackage
 neovim
@@ -309,7 +310,7 @@ services.xserver = {
   boot.loader.efi.canTouchEfiVariables = true;
   # Only keep the 10 most recent generations in the boot menu so it stays
   # tidy (and the ESP doesn't fill up with old kernels).
-  boot.loader.systemd-boot.configurationLimit = 10;
+  boot.loader.systemd-boot.configurationLimit = 3;
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
   # new for the proprietary NVIDIA driver, which fails to compile against it.
