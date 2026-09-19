@@ -356,6 +356,32 @@ services.xserver = {
     wireplumber.enable = true;
   };
 
+  # VLC's HDMI audio pass-through (S/PDIF / IEC958) is broken on the NVIDIA
+  # HDMI output to the TV: Dolby Digital Plus (EAC3) and similar tracks get
+  # passed through raw and produce no sound. Force VLC to decode surround
+  # audio to PCM via avcodec, which the TV plays fine. This touches only the
+  # single `codec=` line in ~/.config/vlc/vlcrc and leaves the rest alone.
+  systemd.user.services.vlc-pcm-decode = {
+    description = "Force VLC to decode surround audio to PCM";
+    wantedBy = [ "default.target" ];
+    path = [ pkgs.coreutils pkgs.gnused pkgs.gnugrep ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "vlc-pcm-decode" ''
+        cfg="$HOME/.config/vlc/vlcrc"
+        mkdir -p "$(dirname "$cfg")"
+        touch "$cfg"
+        if grep -q '^codec=' "$cfg"; then
+          sed -i 's/^codec=.*/codec=avcodec/' "$cfg"
+        elif grep -q '^#codec=' "$cfg"; then
+          sed -i 's/^#codec=.*/codec=avcodec/' "$cfg"
+        else
+          printf '\ncodec=avcodec\n' >> "$cfg"
+        fi
+      '';
+    };
+  };
+
   # Screen capture (OBS, screenshots) via the wlroots desktop portal. mango's
   # own NixOS module configures its portal; the wlr backend here handles
   # ScreenCast/Screenshot. GTK stays the fallback so file pickers keep working.
