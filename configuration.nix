@@ -195,6 +195,7 @@ spotify
 vlc
 rpcs3AppImage
 mocktailPackage
+davinci-resolve
 neovim
 wget
 curl
@@ -496,6 +497,7 @@ services.xserver = {
     "1password"     # _1password-gui
     "1password-cli" # _1password-cli
     "mocktail"      # Roblox client (local derivation)
+    "davinci-resolve" # video editor (Blackmagic, free edition)
   ];
 
   # Enable flakes + the new CLI, so this config itself builds via `nixos-rebuild --flake`.
