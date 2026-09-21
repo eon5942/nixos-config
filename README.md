@@ -67,6 +67,8 @@ the system.
     flake + `programs.mango` NixOS module. Config lives at
     `~/.config/mango/config.conf` (from the dotfiles).
 - **X11 fallback** — Window Maker via `startx`.
+- **Android** — WayDroid, a container-based Android runtime (the Linux
+  stand-in for MuMu Player, which is Windows/macOS-only).
 - **Sound** — PipeWire (`alsa` + `pulse` compatibility).
 - **User** — `eon`, in `wheel` and `networkmanager`.
 - **Auth** — `sudo` disabled; `doas` for the `wheel` group.
@@ -147,6 +149,25 @@ The bare path (no `path:` prefix) is deliberate: nix resolves it as
 `git+file://`, so only *committed* files are built and
 `system.configurationRevision` is stamped into the system (see the ownership
 note below).
+
+## WayDroid (Android on Linux)
+
+WayDroid runs a full Android system in an LXC container on the host kernel (via
+the in-kernel `binder`), so there's no CPU emulation — it runs near-native
+speed. Enabled with `virtualisation.waydroid.enable`.
+
+```sh
+# once: fetch the Android system/vendor image (~1GB, needs root)
+doas waydroid init -s GAPPS
+
+# start Android and show its UI
+waydroid session start
+waydroid show-full-ui
+```
+
+> The Android images are downloaded by `waydroid init` at runtime from
+> WayDroid's mirrors — they're not packaged by nixpkgs, so they're the one part
+> of this setup that isn't pinned in `flake.lock`.
 
 ## Regenerating `hardware-configuration.nix`
 
