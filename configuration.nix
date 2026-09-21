@@ -295,11 +295,20 @@ programs.mango.enable = true;
 # the `waydroid` package from the pinned nixpkgs and drives the in-kernel binder
 # (ANDROID_BINDER_IPC / ANDROID_BINDERFS / ANDROID_BINDER_DEVICES, already
 # built-in in the NixOS kernel), so no out-of-tree kernel module is needed.
+#
+# Networking must use nftables: the nixos-26.05 kernel has dropped the legacy
+# iptables tables (no ip_tables/iptable_filter/iptable_nat/iptable_mangle
+# modules), so the default iptables-backed waydroid-net.sh fails with "Table
+# does not exist". Enabling nftables makes the waydroid module build/use
+# pkgs.waydroid-nftables (LXC_USE_NFT=1) and switches the system firewall to the
+# working nftables backend too.
+#
 # After switch, initialise the Android image once with:
 #   waydroid init -s GAPPS
 # The ~1GB Android system/vendor images are fetched from WayDroid's mirrors at
 # runtime, not via nixpkgs, so they aren't part of flake.lock.
 virtualisation.waydroid.enable = true;
+networking.nftables.enable = true;
 
 # Minimal TUI login (no KDE/Qt bloat).
 services.greetd = {

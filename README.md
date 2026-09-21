@@ -154,7 +154,10 @@ note below).
 
 WayDroid runs a full Android system in an LXC container on the host kernel (via
 the in-kernel `binder`), so there's no CPU emulation — it runs near-native
-speed. Enabled with `virtualisation.waydroid.enable`.
+speed. Enabled with `virtualisation.waydroid.enable`, plus
+`networking.nftables.enable` — the nixos-26.05 kernel has dropped the legacy
+iptables tables, and WayDroid's networking needs the nftables backend
+(`waydroid-nftables`) to bring the `waydroid0` bridge up.
 
 ```sh
 # once: fetch the Android system/vendor image (~1GB, needs root)
