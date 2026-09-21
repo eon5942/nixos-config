@@ -290,6 +290,17 @@ programs.nix-ld.enable = true;
 # the rice, so nixos-rebuild is identical for both states.
 programs.mango.enable = true;
 
+# WayDroid: Linux-native Android container — the Linux stand-in for MuMu Player
+# (which is Windows/macOS-only and has no Linux build). The NixOS module pulls
+# the `waydroid` package from the pinned nixpkgs and drives the in-kernel binder
+# (ANDROID_BINDER_IPC / ANDROID_BINDERFS / ANDROID_BINDER_DEVICES, already
+# built-in in the NixOS kernel), so no out-of-tree kernel module is needed.
+# After switch, initialise the Android image once with:
+#   waydroid init -s GAPPS
+# The ~1GB Android system/vendor images are fetched from WayDroid's mirrors at
+# runtime, not via nixpkgs, so they aren't part of flake.lock.
+virtualisation.waydroid.enable = true;
+
 # Minimal TUI login (no KDE/Qt bloat).
 services.greetd = {
   enable = true;
