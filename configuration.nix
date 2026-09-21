@@ -242,8 +242,8 @@ libxcb-cursor
 unzip
 unrar
 p7zip
-yazi
 audacity
+kdePackages.dolphin
 obs-studio
 wireplumber
 wlr-randr
@@ -266,6 +266,14 @@ fonts.packages = [ pkgs.nerd-fonts.iosevka ];
 programs._1password.enable = true;
 programs._1password-gui = {
   enable = true;
+};
+
+# Mullvad VPN (GUI + CLI + systemd daemon). The service module installs the
+# package, loads the `tun` module, and runs mullvad-daemon so `mullvad` CLI and
+# the GUI can actually connect.
+services.mullvad-vpn = {
+  enable = true;
+  package = pkgs.mullvad-vpn;
 };
 
 # Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
