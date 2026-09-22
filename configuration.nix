@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, refind-minimal, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -183,6 +183,24 @@ let
     mkdir -p "$out"
     cp ${mangoDesktop} "$out/mango.desktop"
   '';
+
+  # rEFInd-minimal theme (github.com/evanpurkhiser/rEFInd-minimal), pinned as
+  # the `refind-minimal` flake input. rEFInd reads its theme from the ESP at
+  # boot, so every theme file is copied to /boot/efi/refind/themes/rEFInd-minimal
+  # via boot.loader.refind.additionalFiles below. The recursive walk keeps this
+  # in sync with whatever the pinned theme commit ships (new icons get picked
+  # up automatically; removed files are cleaned off the ESP by the installer).
+  refindThemeFiles = let
+    collect = dir: prefix:
+      lib.concatLists (lib.mapAttrsToList (name: type: let
+        rel = (if prefix == "" then "" else prefix + "/") + name;
+        path = dir + "/${name}";
+      in
+        if type == "directory" then collect path rel
+        else if lib.elem name [ "README.md" "LICENSE" ] then [ ]
+        else [ { name = "themes/rEFInd-minimal/${rel}"; value = path; } ]
+      ) (builtins.readDir dir));
+  in builtins.listToAttrs (collect refind-minimal "");
 in
 {
 
@@ -334,12 +352,24 @@ services.xserver = {
       ./hardware-configuration.nix
     ];
 
-  # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
+  # Use the rEFInd EFI boot manager, themed with rEFInd-minimal (pinned as the
+  # `refind-minimal` flake input; its files are copied to the ESP via
+  # `additionalFiles` and enabled with the `include` line below).
+  #
+  # GRUB defaults to enabled (enable = !boot.isContainer) and, unlike the
+  # systemd-boot module, the rEFInd module does not flip it off, so its
+  # "no device set" assertion would fire otherwise.
+  boot.loader.grub.enable = false;
+  boot.loader.systemd-boot.enable = false;
   boot.loader.efi.canTouchEfiVariables = true;
-  # Only keep the 10 most recent generations in the boot menu so it stays
-  # tidy (and the ESP doesn't fill up with old kernels).
-  boot.loader.systemd-boot.configurationLimit = 3;
+  boot.loader.refind = {
+    enable = true;
+    # Only keep the 3 most recent generations in the boot menu so it stays
+    # tidy (and the ESP doesn't fill up with old kernels).
+    maxGenerations = 3;
+    extraConfig = "include themes/rEFInd-minimal/theme.conf";
+    additionalFiles = refindThemeFiles;
+  };
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
   # new for the proprietary NVIDIA driver, which fails to compile against it.
