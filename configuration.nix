@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, ryubing, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -184,6 +184,13 @@ let
     cp ${mangoDesktop} "$out/mango.desktop"
   '';
 
+  # Ryubing (Nintendo Switch emulator) built from the pinned `ryubing` flake
+  # input instead of nixpkgs' own src, so the exact commit is locked in
+  # flake.lock. The nuget deps.json still comes from nixpkgs (it matches this
+  # tag); regenerate it if you bump the rev.
+  ryubingPackage = pkgs.ryubing.overrideAttrs (old: {
+    src = ryubing;
+  });
 in
 {
 
@@ -196,6 +203,7 @@ spotify
 vlc
 rpcs3AppImage
 mocktailPackage
+ryubingPackage
 davinci-resolve
 neovim
 wget

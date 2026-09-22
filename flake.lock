@@ -198,7 +198,25 @@
         "dotfiles": "dotfiles",
         "fetch-src": "fetch-src",
         "mango": "mango",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "ryubing": "ryubing"
+      }
+    },
+    "ryubing": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1760166699,
+        "narHash": "sha256-LhQaXxmj5HIgfmrsDN8GhhVXlXHpDO2Q8JtNLaCq0mk=",
+        "ref": "refs/heads/master",
+        "rev": "e2143d43bcb6762340d8a01f20e7b5fdf104f02f",
+        "revCount": 4542,
+        "type": "git",
+        "url": "https://git.ryujinx.app/projects/Ryubing.git"
+      },
+      "original": {
+        "rev": "e2143d43bcb6762340d8a01f20e7b5fdf104f02f",
+        "type": "git",
+        "url": "https://git.ryujinx.app/projects/Ryubing.git"
       }
     },
     "scenefx": {
