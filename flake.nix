@@ -30,21 +30,12 @@
       url = "github:areofyl/fetch/b7d69a25afabc4c53d7444f4fc389c78f4763f1e";
       flake = false;
     };
-
-    # Ryubing (Ryujinx community fork, Nintendo Switch emulator). The upstream
-    # repo (git.ryujinx.app) has no flake.nix, so it is pinned source-only and
-    # pkgs.ryubing is overridden to build from this exact commit. Bump the rev
-    # and regenerate the nuget deps.json when updating.
-    ryubing = {
-      url = "git+https://git.ryujinx.app/projects/Ryubing.git?rev=e2143d43bcb6762340d8a01f20e7b5fdf104f02f";
-      flake = false;
-    };
   };
 
-  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, ryubing, ... }: {
+  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, ... }: {
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit self dotfiles fetch-src ryubing; };
+      specialArgs = { inherit self dotfiles fetch-src; };
       modules = [
         agenix.nixosModules.default
         mango.nixosModules.mango

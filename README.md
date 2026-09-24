@@ -74,8 +74,8 @@ the system.
 - **Auth** — `sudo` disabled; `doas` for the `wheel` group.
 - **Fonts** — Iosevka Nerd Font (matches the dotfiles).
 - **Misc** — `allowUnfreePredicate` (a fixed allowlist, not blanket), default
-  stable kernel, rEFInd (stock, no theme), timezone `America/Los_Angeles`,
-  `stateVersion = "26.05"`.
+  stable kernel, Limine (installed to the removable EFI path), timezone
+  `America/Los_Angeles`, `stateVersion = "26.05"`.
 - **Packages** — neovim, opencode, nodejs, librewolf, foot, wofi, yambar,
   grim/slurp/wl-clipboard, fastfetch/hyfetch, and the mango rice stack:
   `rofi`, `waybar`, `cava`, `lavat`, `kitty`, `mako`, `matugen` — plus steam,

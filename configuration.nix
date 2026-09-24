@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, ryubing, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -183,14 +183,6 @@ let
     mkdir -p "$out"
     cp ${mangoDesktop} "$out/mango.desktop"
   '';
-
-  # Ryubing (Nintendo Switch emulator) built from the pinned `ryubing` flake
-  # input instead of nixpkgs' own src, so the exact commit is locked in
-  # flake.lock. The nuget deps.json still comes from nixpkgs (it matches this
-  # tag); regenerate it if you bump the rev.
-  ryubingPackage = pkgs.ryubing.overrideAttrs (old: {
-    src = ryubing;
-  });
 in
 {
 
@@ -203,7 +195,6 @@ spotify
 vlc
 rpcs3AppImage
 mocktailPackage
-ryubingPackage
 davinci-resolve
 neovim
 wget
@@ -343,20 +334,19 @@ services.xserver = {
       ./hardware-configuration.nix
     ];
 
-  # Use the rEFInd EFI boot manager, installed to the removable path
+  # Use the Limine bootloader, installed to the removable path
   # (EFI/BOOT/BOOTX64.EFI). canTouchEfiVariables is left off so the installer
   # never calls efibootmgr: this firmware's BootOrder references phantom
   # entries (e.g. 2002/2004) with no matching BootXXXX variable, which makes
   # efibootmgr -o abort with "Could not set BootOrder" on every switch. The
   # removable fallback path sidesteps NVRAM entirely.
   #
-  # GRUB defaults to enabled (enable = !boot.isContainer) and, unlike the
-  # systemd-boot module, the rEFInd module does not flip it off, so its
-  # "no device set" assertion would fire otherwise.
+  # GRUB and systemd-boot must be disabled explicitly so they don't also try
+  # to install themselves onto the ESP.
   boot.loader.grub.enable = false;
   boot.loader.systemd-boot.enable = false;
   boot.loader.efi.canTouchEfiVariables = false;
-  boot.loader.refind = {
+  boot.loader.limine = {
     enable = true;
     # Only keep the 3 most recent generations in the boot menu so it stays
     # tidy (and the ESP doesn't fill up with old kernels).
