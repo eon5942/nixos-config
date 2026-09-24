@@ -346,12 +346,19 @@ services.xserver = {
   boot.loader.grub.enable = false;
   boot.loader.systemd-boot.enable = false;
   boot.loader.efi.canTouchEfiVariables = false;
+  boot.loader.timeout = 15;
   boot.loader.limine = {
     enable = true;
     # Only keep the 3 most recent generations in the boot menu so it stays
     # tidy (and the ESP doesn't fill up with old kernels).
     maxGenerations = 3;
     efiInstallAsRemovable = true;
+    # ZereneOS/HaliadeOS-style boot theme: their wallpaper stretched to fill
+    # the screen (matching their stock limine.conf).
+    style = {
+      wallpapers = [ ./limine-wallpaper.png ];
+      wallpaperStyle = "stretched";
+    };
   };
 
   # Use the default (stable) kernel. `linuxPackages_latest` (Linux 7.x) is too
