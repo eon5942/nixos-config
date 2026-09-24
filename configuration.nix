@@ -353,6 +353,11 @@ services.xserver = {
     # tidy (and the ESP doesn't fill up with old kernels).
     maxGenerations = 3;
     efiInstallAsRemovable = true;
+    # The limine module hardcodes `default_entry: 2`, but limine 12.x counts
+    # only bootable entries (not the parent directory), so `2` selects the
+    # *second*-newest generation. Pin it to 1 so the newest generation boots by
+    # default. (extraConfig is prepended and limine uses the first occurrence.)
+    extraConfig = "default_entry: 1\n";
     # ZereneOS/HaliadeOS-style boot theme: their wallpaper stretched to fill
     # the screen (matching their stock limine.conf).
     style = {
