@@ -253,7 +253,7 @@ efibootmgr
 jq
 socat
 playerctl
-python3
+(python3.withPackages (ps: with ps; [ flask pip ]))
 swaylock
 pavucontrol
 qbittorrent
