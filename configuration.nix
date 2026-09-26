@@ -190,6 +190,8 @@ environment.systemPackages = with pkgs; [
 ayugram-desktop
 steamNvidia
 wineWow64Packages.full
+# Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
+lutris
 vesktop
 spotify
 vlc

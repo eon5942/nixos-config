@@ -79,7 +79,7 @@ the system.
 - **Packages** — neovim, opencode, nodejs, librewolf, foot, wofi, yambar,
   grim/slurp/wl-clipboard, fastfetch/hyfetch, and the mango rice stack:
   `rofi`, `waybar`, `cava`, `lavat`, `kitty`, `mako`, `matugen` — plus steam,
-  spotify, vesktop, 1password, and more.
+  lutris (Battle.net), spotify, vesktop, 1password, and more.
 
 ## Rice profiles (before / after)
 
