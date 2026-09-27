@@ -276,6 +276,11 @@ clang-tools
 shfmt
 nixfmt
 prettier
+# fd: fuzzy file search (telescope.nvim). lua: run lua via code_runner.
+# go: provides gofmt formatter + the go toolchain.
+fd
+lua
+go
 opencode
 nodejs_22
 fastfetch
