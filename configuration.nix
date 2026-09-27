@@ -258,6 +258,7 @@ rpcs3AppImage
 mocktailPackage
 davinci-resolve
 neovim
+fish
 wget
 curl
 git
@@ -603,7 +604,12 @@ services.xserver = {
     description = "eon";
     extraGroups = [ "networkmanager" "wheel" ];
     hashedPasswordFile = config.age.secrets."eon-password".path;
+    shell = pkgs.fish;
   };
+
+  # fish is the default interactive shell (see users.users.eon.shell above).
+  # Registers fish in /etc/shells and installs its vendor completions.
+  programs.fish.enable = true;
 
   # Decrypt committed age secrets (./secrets/*.age) at activation. The machine
   # has no SSH host key (sshd is off), so use eon's own ed25519 key to decrypt;
