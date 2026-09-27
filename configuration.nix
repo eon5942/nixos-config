@@ -166,8 +166,8 @@ let
 
     # Re-run the monitor layout so the laptop panel is re-placed edge-to-edge
     # with the new resolution (never overlapping).
-    if [ -x "$HOME/.local/bin/monitor-layout" ]; then
-      "$HOME/.local/bin/monitor-layout"
+    if command -v monitor-layout >/dev/null 2>&1; then
+      monitor-layout
     fi
   '';
 
@@ -183,6 +183,51 @@ let
     [ -z "$geometry" ] && exit 0
     grim -g "$geometry" "$file"
     wl-copy < "$file"
+  '';
+
+  # powermenu: wofi-based power menu (Lock / Suspend / Logout / Reboot /
+  # Shutdown). Bound in the mango config as SUPER+SHIFT+Escape.
+  powermenu = pkgs.writeShellScriptBin "powermenu" ''
+    set -euo pipefail
+    choice="$(printf 'Lock\nSuspend\nLogout\nReboot\nShutdown\n' | wofi -d --prompt 'Power')"
+    [ -z "$choice" ] && exit 0
+    case "$choice" in
+      Lock)     swaylock ;;
+      Suspend)  systemctl suspend ;;
+      Logout)   loginctl terminate-user "$USER" ;;
+      Reboot)   systemctl reboot ;;
+      Shutdown) systemctl poweroff ;;
+    esac
+  '';
+
+  # monitor-layout: arrange enabled outputs so the external display sits at the
+  # origin and the laptop (eDP-*) panel is placed edge-to-edge to its right, so
+  # the outputs can never overlap. Re-run from the mango autostart and by chres
+  # after a resolution change.
+  monitor-layout = pkgs.writeShellScriptBin "monitor-layout" ''
+    set -euo pipefail
+    state="$(wlr-randr --json)"
+
+    laptop="$(printf '%s' "$state" | jq -r '
+      [.[] | select(((.enabled // "") | tostring) == "true" and ((.name // "") | startswith("eDP-")))][0].name // empty
+    ')"
+    external="$(printf '%s' "$state" | jq -r '
+      [.[] | select(((.enabled // "") | tostring) == "true" and ((.name // "") | startswith("eDP-") | not))][0].name // empty
+    ')"
+
+    if [ -n "$external" ]; then
+      width="$(printf '%s' "$state" | jq -r --arg o "$external" '
+        .[] | select(.name == $o)
+        | (.modes // []) | ((map(select((.current // "") | tostring == "true"))[0]) // .[0])
+        | (.width // 0) | tostring
+      ')"
+      wlr-randr --output "$external" --pos 0,0
+      if [ -n "$laptop" ]; then
+        wlr-randr --output "$laptop" --pos "''${width:-0},0"
+      fi
+    elif [ -n "$laptop" ]; then
+      wlr-randr --output "$laptop" --pos 0,0
+    fi
   '';
 
   # Session entry for greetd/tuigreet. Mango is the only (default) compositor.
@@ -279,6 +324,8 @@ pavucontrol
 qbittorrent
 chres
 screenshot
+powermenu
+monitor-layout
 ];
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
