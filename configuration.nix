@@ -286,9 +286,12 @@ foot
 wofi
 yambar
 librewolf
-grim
-slurp
-wl-clipboard
+  grim
+  slurp
+  # Wayland color picker (hyprpicker alternative). Copies the picked hex to the
+  # clipboard and works on wlroots compositors (mango), not just Hyprland.
+  wl-color-picker
+  wl-clipboard
 wf-recorder
 swaybg
 xdg-desktop-portal-wlr
@@ -319,8 +322,10 @@ brightnessctl
 efibootmgr
 jq
 socat
-playerctl
-(python3.withPackages (ps: with ps; [ flask pip ]))
+  playerctl
+  # QEMU machine emulator + virtualizer (qemu-system-*, qemu-img).
+  qemu
+  (python3.withPackages (ps: with ps; [ flask pip ]))
 swaylock
 pavucontrol
 qbittorrent
