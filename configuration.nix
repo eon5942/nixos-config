@@ -246,6 +246,10 @@ unrar
 p7zip
 audacity
 kdePackages.dolphin
+# Creative / office suite
+krita
+gimp
+libreoffice-fresh
 obs-studio
 wireplumber
 wlr-randr
