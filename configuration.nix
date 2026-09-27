@@ -280,6 +280,7 @@ opencode
 nodejs_22
 fastfetch
 hyfetch
+btop
 fetchPackage
 foot
 wofi
