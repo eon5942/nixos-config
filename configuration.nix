@@ -171,6 +171,20 @@ let
     fi
   '';
 
+  # screenshot: interactive region capture (slurp -> grim), saved to
+  # ~/Pictures/Screenshots and copied to the clipboard (wl-copy). Bound in the
+  # mango config as SUPER+SHIFT+s. slurm cancelling (Escape) exits silently.
+  screenshot = pkgs.writeShellScriptBin "screenshot" ''
+    set -euo pipefail
+    dir="''${SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
+    mkdir -p "$dir"
+    file="$dir/$(date +%Y-%m-%d_%H-%M-%S).png"
+    geometry="$(slurp || true)"
+    [ -z "$geometry" ] && exit 0
+    grim -g "$geometry" "$file"
+    wl-copy < "$file"
+  '';
+
   # Session entry for greetd/tuigreet. Mango is the only (default) compositor.
   mangoDesktop = pkgs.writeText "mango.desktop" ''
     [Desktop Entry]
@@ -264,6 +278,7 @@ swaylock
 pavucontrol
 qbittorrent
 chres
+screenshot
 ];
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
