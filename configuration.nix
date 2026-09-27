@@ -288,6 +288,7 @@ librewolf
 grim
 slurp
 wl-clipboard
+wf-recorder
 swaybg
 xdg-desktop-portal-wlr
 mako
