@@ -268,6 +268,8 @@ wineWow64Packages.full
 lutris
 vesktop
 spotify
+# Proton Mail desktop app (official Electron client for Mail + Calendar)
+protonmail-desktop
 vlc
 rpcs3AppImage
 mocktailPackage
