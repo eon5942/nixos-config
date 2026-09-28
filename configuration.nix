@@ -415,6 +415,20 @@ services.xserver = {
   displayManager.startx.enable = true;
 };
 
+# System-wide dark theme. GTK apps get Adwaita-dark, and Qt apps follow the
+# GTK theme so they match too (dolphin, krita, vlc, obs, qbittorrent, etc.).
+gtk = {
+  enable = true;
+  theme = {
+    name = "Adwaita-dark";
+    package = pkgs.gnome-themes-extra;
+  };
+};
+qt = {
+  enable = true;
+  platformTheme = "gtk3";
+};
+
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
