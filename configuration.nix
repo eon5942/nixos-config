@@ -415,18 +415,25 @@ services.xserver = {
   displayManager.startx.enable = true;
 };
 
-# System-wide dark theme. GTK apps get Adwaita-dark, and Qt apps follow the
-# GTK theme so they match too (dolphin, krita, vlc, obs, qbittorrent, etc.).
-gtk = {
-  enable = true;
-  theme = {
-    name = "Adwaita-dark";
-    package = pkgs.gnome-themes-extra;
-  };
-};
+# System-wide dark theme. nixpkgs 26.05 removed the old `gtk.theme` module, so
+# GTK is themed through the XDG settings files it reads from /etc/xdg (plus
+# GTK_THEME for GTK3 apps that skip settings.ini). Qt uses the adwaita-dark
+# style so Qt apps match (dolphin, krita, vlc, obs, qbittorrent, etc.).
+environment.variables.GTK_THEME = "Adwaita:dark";
+environment.etc."xdg/gtk-3.0/settings.ini".text = ''
+  [Settings]
+  gtk-theme-name=Adwaita-dark
+  gtk-application-prefer-dark-theme=1
+'';
+environment.etc."xdg/gtk-4.0/settings.ini".text = ''
+  [Settings]
+  gtk-theme-name=Adwaita-dark
+  gtk-application-prefer-dark-theme=1
+'';
 qt = {
   enable = true;
-  platformTheme = "gtk3";
+  platformTheme = "gnome";
+  style = "adwaita-dark";
 };
 
   imports =
