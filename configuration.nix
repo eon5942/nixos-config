@@ -30,8 +30,8 @@ let
     rpcs3Extracted = pkgs.stdenvNoCC.mkDerivation {
       name = "rpcs3-appimage-extracted";
       src = pkgs.fetchurl {
-        url = "https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/build-726cd2d35885fe016a2ec45d8e972abdb6afa62f/rpcs3-v0.0.42-19988-726cd2d3_linux64.AppImage";
-        sha256 = "sha256-McCZ+9nBZt/pGstzsUzEuJ1asxc2XYYPLFgWLVcmtm4=";
+        url = "https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/build-1707d7fc883ef48ff21bdcbb0141a3211ae09cb2/rpcs3-v0.0.42-20076-1707d7fc_linux64.AppImage";
+        sha256 = "sha256-4+KQY0EMpA/HtcZqqux8FMQRRBNfqgnyP1eXzxUZSlU=";
       };
       sourceRoot = ".";
       unpackPhase = ''
@@ -141,6 +141,36 @@ let
       lockPref("browser.theme.content-theme", 2);
       lockPref("layout.css.prefers-color-scheme.content", 0);
     '';
+  };
+
+  # Radmin VPN is Windows-only (Famatech ships no Linux build), so it's wrapped
+  # under Wine. NOTE: only the GUI runs — the virtual LAN tunnel needs a Windows
+  # kernel TAP driver + service that Wine cannot load, so this can't actually
+  # join a network. Use ZeroTier/Tailscale for a working virtual LAN.
+  radminVpn = pkgs.stdenv.mkDerivation {
+    pname = "radmin-vpn";
+    version = "2.1.4951.1";
+    src = pkgs.fetchurl {
+      url = "https://download.radmin-vpn.com/download/files/Radmin_VPN_2.1.4951.1.exe";
+      sha256 = "sha256-4WcR4uPln2YD9R9DcZchWxkUo9gxbh9jMmAXi5WZIfc=";
+    };
+    dontUnpack = true;
+    dontFixup = true;
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 $src $out/share/radmin-vpn/Radmin_VPN_2.1.4951.1.exe
+      makeWrapper ${pkgs.wineWow64Packages.full}/bin/wine $out/bin/radmin-vpn \
+        --add-flags "$out/share/radmin-vpn/Radmin_VPN_2.1.4951.1.exe"
+      runHook postInstall
+    '';
+    meta = with pkgs.lib; {
+      description = "Radmin VPN client (Windows-only, run under Wine)";
+      homepage = "https://www.radmin-vpn.com/";
+      license = licenses.unfree;
+      mainProgram = "radmin-vpn";
+      platforms = [ "x86_64-linux" ];
+    };
   };
 
   # chres: cycle a monitor through a list of resolutions using wlr-randr
@@ -264,6 +294,7 @@ environment.systemPackages = with pkgs; [
 ayugram-desktop
 steamNvidia
 wineWow64Packages.full
+radminVpn
 # Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
 lutris
 vesktop
@@ -682,6 +713,7 @@ qt = {
     "1password"     # _1password-gui
     "1password-cli" # _1password-cli
     "mocktail"      # Roblox client (local derivation)
+    "radmin-vpn"    # Radmin VPN client (Windows-only, local Wine wrapper)
     "davinci-resolve" # video editor (Blackmagic, free edition)
   ];
 
