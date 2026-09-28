@@ -323,6 +323,7 @@ cava
 cmatrix
 lavat
 kitty
+tmux
 matugen
 vscode
 libxcb-cursor
