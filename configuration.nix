@@ -371,6 +371,11 @@ programs.nix-ld.enable = true;
 # the rice, so nixos-rebuild is identical for both states.
 programs.mango.enable = true;
 
+# Fallback so mango can start even before the dotfiles are deployed: install
+# the package's default config to /etc/mango/config.conf. mango only reads it
+# when ~/.config/mango/config.conf (the dotfiles rice) is absent.
+environment.etc."mango/config.conf".source = "${config.programs.mango.package}/etc/mango/config.conf";
+
 # WayDroid: Linux-native Android container — the Linux stand-in for MuMu Player
 # (which is Windows/macOS-only and has no Linux build). The NixOS module pulls
 # the `waydroid` package from the pinned nixpkgs and drives the in-kernel binder
