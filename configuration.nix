@@ -442,8 +442,10 @@ services.xserver = {
     # The limine module hardcodes `default_entry: 2`, but limine 12.x counts
     # only bootable entries (not the parent directory), so `2` selects the
     # *second*-newest generation. Pin it to 1 so the newest generation boots by
-    # default. (extraConfig is prepended and limine uses the first occurrence.)
-    extraConfig = "default_entry: 1\n";
+    # default. limine uses the *last* occurrence of an option, so this must be
+    # appended (extraEntries) after the module's `default_entry: 2`, not
+    # prepended via extraConfig (which got overridden).
+    extraEntries = "default_entry: 1\n";
     # ZereneOS/HaliadeOS-style boot theme: their wallpaper stretched to fill
     # the screen (matching their stock limine.conf).
     style = {
