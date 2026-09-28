@@ -128,6 +128,21 @@ let
     '';
   };
 
+  # LibreWolf re-wrapped with locked dark-mode prefs so the browser is always
+  # dark (chrome + web content). The prefs are lockPref'd in mozilla.cfg, so
+  # they can't be flipped back to light from the UI. `wrapFirefox` is the same
+  # wrapper nixpkgs uses for the stock `librewolf`, with the same pref/policy
+  # files inherited from `librewolf-unwrapped`.
+  librewolfDark = pkgs.wrapFirefox pkgs.librewolf-unwrapped {
+    inherit (pkgs.librewolf-unwrapped) extraPrefsFiles extraPoliciesFiles;
+    libName = "librewolf";
+    extraPrefs = ''
+      lockPref("ui.systemUsesDarkTheme", 1);
+      lockPref("browser.theme.content-theme", 2);
+      lockPref("layout.css.prefers-color-scheme.content", 0);
+    '';
+  };
+
   # chres: cycle a monitor through a list of resolutions using wlr-randr
   # (wlroots output-management protocol, supported by mango). Runs from a
   # keybind or the shell. Usage: chres [output-name] — defaults to the first
@@ -291,7 +306,7 @@ fetchPackage
 foot
 wofi
 yambar
-librewolf
+librewolfDark
   grim
   slurp
   # Wayland color picker (hyprpicker alternative). Copies the picked hex to the
