@@ -143,36 +143,6 @@ let
     '';
   };
 
-  # Radmin VPN is Windows-only (Famatech ships no Linux build), so it's wrapped
-  # under Wine. NOTE: only the GUI runs — the virtual LAN tunnel needs a Windows
-  # kernel TAP driver + service that Wine cannot load, so this can't actually
-  # join a network. Use ZeroTier/Tailscale for a working virtual LAN.
-  radminVpn = pkgs.stdenv.mkDerivation {
-    pname = "radmin-vpn";
-    version = "2.1.4951.1";
-    src = pkgs.fetchurl {
-      url = "https://download.radmin-vpn.com/download/files/Radmin_VPN_2.1.4951.1.exe";
-      sha256 = "sha256-4WcR4uPln2YD9R9DcZchWxkUo9gxbh9jMmAXi5WZIfc=";
-    };
-    dontUnpack = true;
-    dontFixup = true;
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    installPhase = ''
-      runHook preInstall
-      install -Dm755 $src $out/share/radmin-vpn/Radmin_VPN_2.1.4951.1.exe
-      makeWrapper ${pkgs.wineWow64Packages.full}/bin/wine $out/bin/radmin-vpn \
-        --add-flags "$out/share/radmin-vpn/Radmin_VPN_2.1.4951.1.exe"
-      runHook postInstall
-    '';
-    meta = with pkgs.lib; {
-      description = "Radmin VPN client (Windows-only, run under Wine)";
-      homepage = "https://www.radmin-vpn.com/";
-      license = licenses.unfree;
-      mainProgram = "radmin-vpn";
-      platforms = [ "x86_64-linux" ];
-    };
-  };
-
   # chres: cycle a monitor through a list of resolutions using wlr-randr
   # (wlroots output-management protocol, supported by mango). Runs from a
   # keybind or the shell. Usage: chres [output-name] — defaults to the first
@@ -294,7 +264,7 @@ environment.systemPackages = with pkgs; [
 ayugram-desktop
 steamNvidia
 wineWow64Packages.full
-radminVpn
+tailscale
 # Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
 lutris
 vesktop
@@ -405,6 +375,12 @@ services.mullvad-vpn = {
   enable = true;
   package = pkgs.mullvad-vpn;
 };
+
+# Tailscale: WireGuard-based mesh VPN for a working virtual LAN (replaces the
+# Wine-wrapped Radmin VPN, whose Windows TAP driver/service can't run under
+# Wine). Enables the tailscaled daemon; authenticate once with `tailscale up`,
+# then friends join your tailnet and reach your RPCS3 server at the 100.x IP.
+services.tailscale.enable = true;
 
 # Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
 # LSP servers like lua-language-server, rust-analyzer, clangd) find the Linux
@@ -713,7 +689,6 @@ qt = {
     "1password"     # _1password-gui
     "1password-cli" # _1password-cli
     "mocktail"      # Roblox client (local derivation)
-    "radmin-vpn"    # Radmin VPN client (Windows-only, local Wine wrapper)
     "davinci-resolve" # video editor (Blackmagic, free edition)
   ];
 
