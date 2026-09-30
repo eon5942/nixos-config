@@ -421,6 +421,12 @@ environment.etc."mango/config.conf".source = "${config.programs.mango.package}/e
 virtualisation.waydroid.enable = true;
 networking.nftables.enable = true;
 
+# libvirt + virt-manager: GUI frontend for QEMU/KVM. libvirtd is the management
+# daemon; virt-manager connects to qemu:///system over it. The `eon` user is
+# added to the `libvirtd` group so it can manage VMs without doas.
+virtualisation.libvirtd.enable = true;
+programs.virt-manager.enable = true;
+
 # Minimal TUI login (no KDE/Qt bloat).
 services.greetd = {
   enable = true;
@@ -655,7 +661,7 @@ qt = {
   users.users."eon" = {
     isNormalUser = true;
     description = "eon";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd" ];
     hashedPasswordFile = config.age.secrets."eon-password".path;
     shell = pkgs.fish;
   };
