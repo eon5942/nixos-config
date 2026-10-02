@@ -265,6 +265,8 @@ ayugram-desktop
 steamNvidia
 wineWow64Packages.full
 tailscale
+# distrobox: run distro containers (Arch, etc.) on top of docker/podman
+distrobox
 # Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
 lutris
 vesktop
