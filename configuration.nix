@@ -427,6 +427,10 @@ networking.nftables.enable = true;
 virtualisation.libvirtd.enable = true;
 programs.virt-manager.enable = true;
 
+# Docker for containers/distrobox — the clean way to run prebuilt Linux binaries
+# (e.g. TheChoicerVoicer, which needs a glibc newer than 26.05 ships) on NixOS.
+virtualisation.docker.enable = true;
+
 # Minimal TUI login (no KDE/Qt bloat).
 services.greetd = {
   enable = true;
@@ -661,7 +665,7 @@ qt = {
   users.users."eon" = {
     isNormalUser = true;
     description = "eon";
-    extraGroups = [ "networkmanager" "wheel" "libvirtd" ];
+    extraGroups = [ "networkmanager" "wheel" "libvirtd" "docker" ];
     hashedPasswordFile = config.age.secrets."eon-password".path;
     shell = pkgs.fish;
   };
