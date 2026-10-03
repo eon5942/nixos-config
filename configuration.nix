@@ -437,6 +437,14 @@ networking.nftables.enable = true;
 virtualisation.libvirtd.enable = true;
 programs.virt-manager.enable = true;
 
+# libvirt QEMU hook: hands the NVIDIA dGPU to the `win11` VM on start and
+# returns it to the host on shutdown (dynamic passthrough, so the host keeps
+# PRIME-offload gaming when the VM isn't running). Must be executable.
+environment.etc."libvirt/hooks/qemu" = {
+  source = ./vfio-qemu-hook.sh;
+  mode = "0755";
+};
+
 # Docker for containers/distrobox — the clean way to run prebuilt Linux binaries
 # (e.g. TheChoicerVoicer, which needs a glibc newer than 26.05 ships) on NixOS.
 virtualisation.docker.enable = true;
@@ -528,6 +536,11 @@ qt = {
   # devices in passthrough mode unless explicitly assigned, so host perf isn't
   # affected outside the VM. Required for VFIO to give the NVIDIA dGPU to QEMU.
   boot.kernelParams = [ "intel_iommu=on" "iommu=pt" ];
+
+  # VFIO modules for dynamic GPU passthrough (see vfio-qemu-hook.sh). Loaded at
+  # boot so the hook can bind the dGPU to vfio-pci on demand; the dGPU otherwise
+  # stays bound to `nvidia` for normal PRIME-offload gaming on the host.
+  boot.kernelModules = [ "vfio_pci" "vfio" "vfio_iommu_type1" ];
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
