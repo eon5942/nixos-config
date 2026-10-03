@@ -115,6 +115,11 @@ let
   # Mesa GLX, segfaults ("failed to load driver: nvidia-drm"), and falls back to
   # software rendering, which makes the client feel sluggish. Wrapping the binary
   # means the app-launcher .desktop entry (`Exec=steam %U`) picks it up unchanged.
+  #
+  # STEAM_EXTRA_COMPAT_TOOLS_PATHS exposes GE-Proton (community Proton build,
+  # pinned to GE-Proton11-1 in nixpkgs) to Steam as a selectable compatibility
+  # tool. Its `steamcompattool` output is the directory Steam scans for
+  # `compatibilitytool.vdf`, so it shows up in the game's Compatibility dropdown.
   steamNvidia = pkgs.symlinkJoin {
     name = "steam-nvidia";
     paths = [ pkgs.steam ];
@@ -124,7 +129,8 @@ let
         --set __NV_PRIME_RENDER_OFFLOAD 1 \
         --set __NV_PRIME_RENDER_OFFLOAD_PROVIDER NVIDIA-G0 \
         --set __GLX_VENDOR_LIBRARY_NAME nvidia \
-        --set __VK_LAYER_NV_optimus NVIDIA_only
+        --set __VK_LAYER_NV_optimus NVIDIA_only \
+        --set STEAM_EXTRA_COMPAT_TOOLS_PATHS ${pkgs.proton-ge-bin.steamcompattool}
     '';
   };
 
