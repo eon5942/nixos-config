@@ -365,6 +365,11 @@ socat
   # install.wim via NTFS). Ventoy is the alternative but nixpkgs flags it
   # insecure (untrusted binary blobs), so we use the open-source tool instead.
   woeusb-ng
+  # woeusb-ng's runtime deps (mkntfs/mkfs.fat/wimlib). It doesn't declare them,
+  # so without these on PATH it dies with "mkntfs command not found".
+  ntfs3g
+  dosfstools
+  wimlib
   (python3.withPackages (ps: with ps; [ flask pip ]))
 swaylock
 pavucontrol
