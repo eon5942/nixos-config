@@ -338,7 +338,8 @@ lavat
 kitty
 tmux
 matugen
-vscode
+# VSCodium: VS Code without Microsoft telemetry/tracking (same editor).
+vscodium
 libxcb-cursor
 unzip
 unrar
@@ -704,7 +705,6 @@ qt = {
     "steam"           # client + Proton
     "steam-unwrapped" # the unfree client payload behind `steam`
     "spotify"
-    "vscode"
     "unrar"
     "nvidia-x11"            # proprietary NVIDIA driver (hardware.nvidia)
     "nvidia-settings"       # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
