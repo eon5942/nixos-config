@@ -269,6 +269,8 @@ tailscale
 distrobox
 # Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
 lutris
+# Prism Launcher (open-source Minecraft launcher)
+prismlauncher
 vesktop
 spotify
 # Proton Mail desktop app (official Electron client for Mail + Calendar)
