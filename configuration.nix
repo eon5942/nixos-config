@@ -360,6 +360,10 @@ socat
   playerctl
   # QEMU machine emulator + virtualizer (qemu-system-*, qemu-img).
   qemu
+  # WoeUSB-ng: write a Windows ISO to a USB stick (handles Win11's >4GB
+  # install.wim via NTFS). Ventoy is the alternative but nixpkgs flags it
+  # insecure (untrusted binary blobs), so we use the open-source tool instead.
+  woeusb-ng
   (python3.withPackages (ps: with ps; [ flask pip ]))
 swaylock
 pavucontrol
