@@ -524,6 +524,11 @@ qt = {
   # new for the proprietary NVIDIA driver, which fails to compile against it.
   boot.kernelPackages = pkgs.linuxPackages;
 
+  # Enable VT-d (IOMMU) for GPU passthrough to a Windows VM. `iommu=pt` keeps
+  # devices in passthrough mode unless explicitly assigned, so host perf isn't
+  # affected outside the VM. Required for VFIO to give the NVIDIA dGPU to QEMU.
+  boot.kernelParams = [ "intel_iommu=on" "iommu=pt" ];
+
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
