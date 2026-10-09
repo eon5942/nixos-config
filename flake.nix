@@ -42,5 +42,12 @@
         ./configuration.nix
       ];
     };
+
+    # ThinkPad T480 — lean host, no mango/agenix for now.
+    nixosConfigurations.t480 = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit self dotfiles fetch-src; };
+      modules = [ ./t480.nix ];
+    };
   };
 }
