@@ -724,6 +724,12 @@ qt = {
   # Enable flakes + the new CLI, so this config itself builds via `nixos-rebuild --flake`.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # Build everything from source: never query a binary cache.
+  # Binary-only packages (steam, spotify, davinci-resolve, ...) are unaffected:
+  # they have no C to compile, and fetchurl still downloads their blobs directly,
+  # which `substitute = false` does not block.
+  nix.settings.substitute = false;
+
   # Do not install a mutable `nixos` channel. Every input comes from flake.lock;
   # a channel could drift independently of the lock and silently change what a
   # bare `nixos-rebuild` (without `--flake`) would build.
