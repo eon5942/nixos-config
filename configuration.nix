@@ -384,6 +384,15 @@ powermenu
 monitor-layout
 ];
 
+#tgt telegram tui
+{pkgs, tgt, ...}: {
+  environment = {
+    systemPackages = [
+        (tgt.packages.${pkgs.system}.default)
+    ];
+  };
+}
+
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
 fonts.packages = [ pkgs.nerd-fonts.iosevka ];
 # 1password

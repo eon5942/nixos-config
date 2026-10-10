@@ -33,11 +33,18 @@
 
     # telegram-rs: minimal Telegram CLI ("tg") built on TDLib. Not a flake, so
     # it's pulled as a plain source input (flake = false) and built by a local
-    # derivation in configuration.nix.
-    telegram-rs = {
-      url = "github:evanpurkhiser/telegram-rs";
-      flake = false;
-    };
+    # derivation in configuration.nix
+
+
+    {
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"
+    tgt.url = "github:FedericoBruzzone/tgt";
+    tgt.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { nixpkgs, tgt, ... }: { /* ... */ }
+}
 
     # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt). A flake exposing
     # packages.<system>.default, built against our pinned nixpkgs.
