@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, telegramRs, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, telegramRs, tgt, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -270,6 +270,8 @@ environment.systemPackages = with pkgs; [
 ayugram-desktop
 # tg: minimal Telegram CLI (built from the telegram-rs flake input).
 telegramRs
+# tgt: Telegram TUI (github.com/FedericoBruzzone/tgt, from the tgt flake input).
+(tgt.packages.${pkgs.system}.default)
 steamNvidia
 wineWow64Packages.full
 tailscale
@@ -488,6 +490,8 @@ services.xserver = {
 # GTK is themed through the XDG settings files it reads from /etc/xdg (plus
 # GTK_THEME for GTK3 apps that skip settings.ini). Qt uses the adwaita-dark
 # style so Qt apps match (dolphin, krita, vlc, obs, qbittorrent, etc.).
+# No `platformTheme = "gnome"` — that drags in qgnomeplatform, a GNOME-specific
+# Qt bridge that does nothing on a wlroots compositor.
 environment.variables.GTK_THEME = "Adwaita:dark";
 environment.etc."xdg/gtk-3.0/settings.ini".text = ''
   [Settings]
@@ -501,7 +505,6 @@ environment.etc."xdg/gtk-4.0/settings.ini".text = ''
 '';
 qt = {
   enable = true;
-  platformTheme = "gnome";
   style = "adwaita-dark";
 };
 

@@ -38,9 +38,16 @@
       url = "github:evanpurkhiser/telegram-rs";
       flake = false;
     };
+
+    # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt). A flake exposing
+    # packages.<system>.default, built against our pinned nixpkgs.
+    tgt = {
+      url = "github:FedericoBruzzone/tgt";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, telegram-rs, ... }:
+  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, telegram-rs, tgt, ... }:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
@@ -91,7 +98,7 @@
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit self dotfiles fetch-src telegramRs; };
+        specialArgs = { inherit self dotfiles fetch-src telegramRs tgt; };
         modules = [
           agenix.nixosModules.default
           mango.nixosModules.mango
