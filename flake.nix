@@ -38,7 +38,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"
-    tgt.url = "github:FedericoBruzzone/tgt";
+    tgt.url ; "github:FedericoBruzzone/tgt";
     tgt.inputs.nixpkgs.follows = "nixpkgs";
   };
 
