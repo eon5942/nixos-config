@@ -42,7 +42,7 @@
     tgt.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, telegram-rs, tgt, ... }:
+  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, telegram-rs, tgt, ... }: { /* ... */ }
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
