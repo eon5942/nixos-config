@@ -27,6 +27,14 @@
   # ThinkPad power management (dual battery).
   services.tlp.enable = true;
 
+  # Ollama: local LLM server on localhost:11434. Unlike the NVIDIA workstation
+  # (ollama-cuda + qwen3:14b), the T480 has no dGPU, so this runs CPU-only
+  # (default `pkgs.ollama`) with a smaller model the 8th-gen i7 can drive.
+  services.ollama = {
+    enable = true;
+    loadModels = [ "qwen3:4b" ];
+  };
+
   # Same user as the main host; no agenix here, set a password on first login
   # with `passwd`.
   users.users.eon = {
