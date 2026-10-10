@@ -451,6 +451,18 @@ programs.virt-manager.enable = true;
 # (e.g. TheChoicerVoicer, which needs a glibc newer than 26.05 ships) on NixOS.
 virtualisation.docker.enable = true;
 
+# Ollama: local LLM server at localhost:11434 (the module default host/port).
+# ollama-cuda builds against CUDA so it runs on the NVIDIA dGPU; qwen3:14b is
+# pulled once on boot by the ollama-model-loader service, so it's ready at the
+# API without a manual `ollama pull`. The model weights are fetched from
+# Ollama's registry at activation (not in flake.lock), but the *choice* is
+# pinned here so a rebuild reproduces the same model.
+services.ollama = {
+  enable = true;
+  package = pkgs.ollama-cuda;
+  loadModels = [ "qwen3:14b" ];
+};
+
 # Minimal TUI login (no KDE/Qt bloat).
 services.greetd = {
   enable = true;
@@ -706,29 +718,34 @@ qt = {
   # Allow only the specific unfree packages this system needs, instead of
   # blanket `allowUnfree = true`, so a new unfree dependency is caught at build
   # time rather than silently accepted.
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "steam"           # client + Proton
-    "steam-unwrapped" # the unfree client payload behind `steam`
-    "spotify"
-    "unrar"
-    "nvidia-x11"            # proprietary NVIDIA driver (hardware.nvidia)
-    "nvidia-settings"       # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
-    "nvidia-kernel-modules" # driver kernel modules
-    "nvidia-firmware"       # GSP firmware
-    "1password"     # _1password-gui
-    "1password-cli" # _1password-cli
-    "mocktail"      # Roblox client (local derivation)
-    "davinci-resolve" # video editor (Blackmagic, free edition)
-  ];
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [
+      "steam"           # client + Proton
+      "steam-unwrapped" # the unfree client payload behind `steam`
+      "spotify"
+      "unrar"
+      "nvidia-x11"            # proprietary NVIDIA driver (hardware.nvidia)
+      "nvidia-settings"       # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
+      "nvidia-kernel-modules" # driver kernel modules
+      "nvidia-firmware"       # GSP firmware
+      "1password"     # _1password-gui
+      "1password-cli" # _1password-cli
+      "mocktail"      # Roblox client (local derivation)
+      "davinci-resolve" # video editor (Blackmagic, free edition)
+    ]
+    # ollama-cuda pulls the CUDA toolkit (cudart, cublas, ...), all of which
+    # are `nvidiaCuda`/`nvidiaCudaRedist` ("CUDA EULA"). Match by license so we
+    # don't have to list every redistributable package name individually.
+    || lib.any (l: (l.shortName or "") == "CUDA EULA") (lib.toList (pkg.meta.license or [ ]));
 
   # Enable flakes + the new CLI, so this config itself builds via `nixos-rebuild --flake`.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  # Build everything from source: never query a binary cache.
-  # Binary-only packages (steam, spotify, davinci-resolve, ...) are unaffected:
-  # they have no C to compile, and fetchurl still downloads their blobs directly,
-  # which `substitute = false` does not block.
-  nix.settings.substitute = false;
+  # Allow the binary cache. `substitute = false` (build-everything-from-source)
+  # made every nixpkgs bump recompile gcc/glibc/binutils and re-fetch their
+  # sources from ftpmirror.gnu.org, which intermittently times out. With the
+  # cache enabled, nix pulls prebuilt binaries from cache.nixos.org instead.
+  nix.settings.substitute = true;
 
   # Do not install a mutable `nixos` channel. Every input comes from flake.lock;
   # a channel could drift independently of the lock and silently change what a
