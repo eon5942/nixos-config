@@ -44,7 +44,6 @@
   };
 
   outputs = { nixpkgs, tgt, ... }: { /* ... */ }
-}
 
     # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt). A flake exposing
     # packages.<system>.default, built against our pinned nixpkgs.
