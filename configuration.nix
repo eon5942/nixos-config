@@ -462,7 +462,7 @@ virtualisation.docker.enable = true;
 services.ollama = {
   enable = true;
   package = pkgs.ollama-cuda;
-  loadModels = [ "qwen3:14b" ];
+  loadModels = [ "qwen3:14b" "qwen3:8b" ];
 };
 
 # Minimal TUI login (no KDE/Qt bloat).
