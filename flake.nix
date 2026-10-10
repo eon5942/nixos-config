@@ -36,21 +36,10 @@
     # derivation in configuration.nix
 
 
-    {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable"
     tgt.url = "github:FedericoBruzzone/tgt";
     tgt.inputs.nixpkgs.follows = "nixpkgs";
-  };
-
-  outputs = { nixpkgs, tgt, ... }: { /* ... */ }
-
-    # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt). A flake exposing
-    # packages.<system>.default, built against our pinned nixpkgs.
-    tgt = {
-      url = "github:FedericoBruzzone/tgt";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, telegram-rs, tgt, ... }:
