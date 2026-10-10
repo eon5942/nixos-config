@@ -55,6 +55,11 @@
           });
         fix = d: if d.pname or "" == "tdlib" then tdlibFixed else d;
       in {
+        cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+          name = "${old.pname or "tgt"}-${old.version or "unstable"}-vendor";
+          src = old.src;
+          hash = "sha256-lWaRWXQ5V2LQTqJ+ymfNGeCZz+QyZLgLkOh5BqDWDZQ=";
+        };
         nativeBuildInputs = map fix old.nativeBuildInputs;
         buildInputs = map fix old.buildInputs;
         env = (old.env or { }) // {
