@@ -153,7 +153,6 @@
         "fetch-src": "fetch-src",
         "mango": "mango",
         "nixpkgs": "nixpkgs",
-        "telegram-rs": "telegram-rs",
         "tgt": "tgt"
       }
     },
@@ -192,22 +191,6 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default-linux",
-        "type": "github"
-      }
-    },
-    "telegram-rs": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1785857860,
-        "narHash": "sha256-6+pAlLIMKvHeN5c7cEKjc7sroLzmEJpXFErVQdMALHg=",
-        "owner": "evanpurkhiser",
-        "repo": "telegram-rs",
-        "rev": "0e1c1139828c58cdc3c5f7cec3f6a8e8d3d746dd",
-        "type": "github"
-      },
-      "original": {
-        "owner": "evanpurkhiser",
-        "repo": "telegram-rs",
         "type": "github"
       }
     },

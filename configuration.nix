@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, telegramRs, tgt, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, tgtFixed, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -268,10 +268,8 @@ in
 
 environment.systemPackages = with pkgs; [
 ayugram-desktop
-# tg: minimal Telegram CLI (built from the telegram-rs flake input).
-telegramRs
 # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt, from the tgt flake input).
-(tgt.packages.${pkgs.system}.default)
+tgtFixed
 steamNvidia
 wineWow64Packages.full
 tailscale
@@ -384,14 +382,6 @@ powermenu
 monitor-layout
 ];
 
-#tgt telegram tui
-{pkgs, tgt, ...}: {
-  environment = {
-    systemPackages = [
-        (tgt.packages.${pkgs.system}.default)
-    ];
-  };
-}
 
 # Iosevka Nerd Font (matches the kitty font from your dotfiles)
 fonts.packages = [ pkgs.nerd-fonts.iosevka ];
