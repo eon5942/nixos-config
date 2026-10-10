@@ -1,4 +1,4 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, ... }:
+{ config, lib, pkgs, self, dotfiles, fetch-src, telegramRs, ... }:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -268,6 +268,8 @@ in
 
 environment.systemPackages = with pkgs; [
 ayugram-desktop
+# tg: minimal Telegram CLI (built from the telegram-rs flake input).
+telegramRs
 steamNvidia
 wineWow64Packages.full
 tailscale
