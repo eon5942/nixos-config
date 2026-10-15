@@ -221,6 +221,14 @@ let
     esac
   '';
 
+
+  #bluetooth with gui
+  hardware.bluetooth = {
+  enable = true;
+  powerOnBoot = false;
+  services.blueman.enable = true;
+};
+
   # monitor-layout: arrange enabled outputs so the external display sits at the
   # origin and the laptop (eDP-*) panel is placed edge-to-edge to its right, so
   # the outputs can never overlap. Re-run from the mango autostart and by chres
