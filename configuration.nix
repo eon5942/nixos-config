@@ -222,11 +222,10 @@ let
   '';
 
 
-  #bluetooth with gui
+  #bluetooth
   hardware.bluetooth = {
   enable = true;
   powerOnBoot = false;
-  services.blueman.enable = true;
 };
 
   # monitor-layout: arrange enabled outputs so the external display sits at the

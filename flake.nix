@@ -39,6 +39,12 @@
     };
   };
 
+
+  #bluetui
+	blueman = {
+	url = "github:pythops/bluetui";
+	flake = false;
+	};
   outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, tgt, ... }:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
