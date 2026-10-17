@@ -38,41 +38,59 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-
-
-
-  outputs = { self, nixpkgs, agenix, mango, dotfiles, fetch-src, tgt, ... }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      agenix,
+      mango,
+      dotfiles,
+      fetch-src,
+      tgt,
+      ...
+    }:
     let
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
       # tgt pins tdlib 1.8.29, whose CMakeLists requires cmake <3.5, but
       # nixos-26.05 ships cmake 4.x which dropped that. Inject the
       # compatibility flag into tgt's tdlib so it still configures.
-      tgtFixed = tgt.packages.x86_64-linux.default.overrideAttrs (old: let
-        tdlibFixed =
-          (builtins.head
-            (builtins.filter (d: d.pname or "" == "tdlib") old.buildInputs))
-          .overrideAttrs (o: {
-            cmakeFlags = (o.cmakeFlags or [ ]) ++ [ "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" ];
-          });
-        fix = d: if d.pname or "" == "tdlib" then tdlibFixed else d;
-      in {
-        cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-          name = "${old.pname or "tgt"}-${old.version or "unstable"}-vendor";
-          src = old.src;
-          hash = "sha256-lWaRWXQ5V2LQTqJ+ymfNGeCZz+QyZLgLkOh5BqDWDZQ=";
-        };
-        nativeBuildInputs = map fix old.nativeBuildInputs;
-        buildInputs = map fix old.buildInputs;
-        env = (old.env or { }) // {
-          RUSTFLAGS = "-C link-arg=-Wl,-rpath,${tdlibFixed}/lib -L ${pkgs.openssl}/lib";
-          LOCAL_TDLIB_PATH = "${tdlibFixed}/lib";
-        };
-      });
-    in {
+      tgtFixed = tgt.packages.x86_64-linux.default.overrideAttrs (
+        old:
+        let
+          tdlibFixed =
+            (builtins.head (builtins.filter (d: d.pname or "" == "tdlib") old.buildInputs)).overrideAttrs
+              (o: {
+                cmakeFlags = (o.cmakeFlags or [ ]) ++ [ "-DCMAKE_POLICY_VERSION_MINIMUM=3.5" ];
+              });
+          fix = d: if d.pname or "" == "tdlib" then tdlibFixed else d;
+        in
+        {
+          cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+            name = "${old.pname or "tgt"}-${old.version or "unstable"}-vendor";
+            src = old.src;
+            hash = "sha256-lWaRWXQ5V2LQTqJ+ymfNGeCZz+QyZLgLkOh5BqDWDZQ=";
+          };
+          nativeBuildInputs = map fix old.nativeBuildInputs;
+          buildInputs = map fix old.buildInputs;
+          env = (old.env or { }) // {
+            RUSTFLAGS = "-C link-arg=-Wl,-rpath,${tdlibFixed}/lib -L ${pkgs.openssl}/lib";
+            LOCAL_TDLIB_PATH = "${tdlibFixed}/lib";
+          };
+        }
+      );
+    in
+    {
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit self dotfiles fetch-src tgtFixed; };
+        specialArgs = {
+          inherit
+            self
+            dotfiles
+            fetch-src
+            tgtFixed
+            ;
+        };
         modules = [
           agenix.nixosModules.default
           mango.nixosModules.mango

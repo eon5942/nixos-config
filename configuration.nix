@@ -1,4 +1,13 @@
-{ config, lib, pkgs, self, dotfiles, fetch-src, tgtFixed, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  self,
+  dotfiles,
+  fetch-src,
+  tgtFixed,
+  ...
+}:
 
 let
   # areofyl/fetch: animated 3D fetch tool (not yet in stable nixpkgs).
@@ -12,7 +21,12 @@ let
     nativeBuildInputs = [ pkgs.makeWrapper ];
     makeFlags = [ "PREFIX=${pkgs.lib.placeholder "out"}" ];
     postInstall = ''
-      wrapProgram $out/bin/fetch --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.fastfetch pkgs.pciutils ]}
+      wrapProgram $out/bin/fetch --prefix PATH : ${
+        pkgs.lib.makeBinPath [
+          pkgs.fastfetch
+          pkgs.pciutils
+        ]
+      }
     '';
     meta = {
       description = "Animated 3D fetch tool";
@@ -26,38 +40,40 @@ let
   # RPCS3 AppImage (newer than the nixpkgs 0.0.40 package). The AppImage's
   # zstd squashfs can't be unpacked by unsquashfs, so we extract with the
   # AppImage runtime's own --appimage-extract and wrap it in an FHS env.
-  rpcs3AppImage = let
-    rpcs3Extracted = pkgs.stdenvNoCC.mkDerivation {
-      name = "rpcs3-appimage-extracted";
-      src = pkgs.fetchurl {
-        url = "https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/build-1707d7fc883ef48ff21bdcbb0141a3211ae09cb2/rpcs3-v0.0.42-20076-1707d7fc_linux64.AppImage";
-        sha256 = "sha256-4+KQY0EMpA/HtcZqqux8FMQRRBNfqgnyP1eXzxUZSlU=";
+  rpcs3AppImage =
+    let
+      rpcs3Extracted = pkgs.stdenvNoCC.mkDerivation {
+        name = "rpcs3-appimage-extracted";
+        src = pkgs.fetchurl {
+          url = "https://github.com/RPCS3/rpcs3-binaries-linux/releases/download/build-1707d7fc883ef48ff21bdcbb0141a3211ae09cb2/rpcs3-v0.0.42-20076-1707d7fc_linux64.AppImage";
+          sha256 = "sha256-4+KQY0EMpA/HtcZqqux8FMQRRBNfqgnyP1eXzxUZSlU=";
+        };
+        sourceRoot = ".";
+        unpackPhase = ''
+          cp "$src" rpcs3.AppImage
+          chmod +x rpcs3.AppImage
+        '';
+        installPhase = ''
+          ./rpcs3.AppImage --appimage-extract
+          mkdir -p "$out"
+          cp -a AppDir/. "$out/"
+        '';
       };
-      sourceRoot = ".";
-      unpackPhase = ''
-        cp "$src" rpcs3.AppImage
-        chmod +x rpcs3.AppImage
-      '';
-      installPhase = ''
-        ./rpcs3.AppImage --appimage-extract
-        mkdir -p "$out"
-        cp -a AppDir/. "$out/"
+    in
+    pkgs.symlinkJoin {
+      name = "rpcs3-appimage";
+      paths = [
+        (pkgs.appimageTools.wrapAppImage {
+          name = "rpcs3";
+          src = rpcs3Extracted;
+        })
+      ];
+      postBuild = ''
+        mkdir -p "$out/share"
+        cp -a "${rpcs3Extracted}/usr/share/applications" "$out/share/"
+        cp -a "${rpcs3Extracted}/usr/share/icons" "$out/share/"
       '';
     };
-  in pkgs.symlinkJoin {
-    name = "rpcs3-appimage";
-    paths = [
-      (pkgs.appimageTools.wrapAppImage {
-        name = "rpcs3";
-        src = rpcs3Extracted;
-      })
-    ];
-    postBuild = ''
-      mkdir -p "$out/share"
-      cp -a "${rpcs3Extracted}/usr/share/applications" "$out/share/"
-      cp -a "${rpcs3Extracted}/usr/share/icons" "$out/share/"
-    '';
-  };
 
   # Mocktail: Roblox Player AppImage (github.com/komaruworld/mocktail).
   # Wrapped with --appimage-extract-and-run so it runs without FUSE, and ships
@@ -221,30 +237,29 @@ let
     esac
   '';
 
-
   #bluetooth
   services.bluetoothctl.enable = true;
   hardware.bluetooth = {
-  enable = true;
-  powerOnBoot = true;
-  settings = {
-    General = {
-      # Shows battery charge of connected devices on supported
-      # Bluetooth adapters. Defaults to 'false'.
-      Experimental = true;
-      # When enabled other devices can connect faster to us, however
-      # the tradeoff is increased power consumption. Defaults to
-      # 'false'.
-      FastConnectable = true;
-    };
-    Policy = {
-      # Enable all controllers when they are found. This includes
-      # adapters present on start as well as adapters that are plugged
-      # in later on. Defaults to 'true'.
-      AutoEnable = true;
+    enable = true;
+    powerOnBoot = true;
+    settings = {
+      General = {
+        # Shows battery charge of connected devices on supported
+        # Bluetooth adapters. Defaults to 'false'.
+        Experimental = true;
+        # When enabled other devices can connect faster to us, however
+        # the tradeoff is increased power consumption. Defaults to
+        # 'false'.
+        FastConnectable = true;
+      };
+      Policy = {
+        # Enable all controllers when they are found. This includes
+        # adapters present on start as well as adapters that are plugged
+        # in later on. Defaults to 'true'.
+        AutoEnable = true;
+      };
     };
   };
-};
 
   # monitor-layout: arrange enabled outputs so the external display sits at the
   # origin and the laptop (eDP-*) panel is placed edge-to-edge to its right, so
@@ -291,251 +306,261 @@ let
 in
 {
 
-environment.systemPackages = with pkgs; [
-ayugram-desktop
-# tgt: Telegram TUI (github.com/FedericoBruzzone/tgt, from the tgt flake input).
-tgtFixed
-steamNvidia
-wineWow64Packages.full
-tailscale
-# distrobox: run distro containers (Arch, etc.) on top of docker/podman
-distrobox
-# Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
-lutris
-# Prism Launcher (open-source Minecraft launcher)
-prismlauncher
-vesktop
-spotify
-# Proton Mail desktop app (official Electron client for Mail + Calendar)
-protonmail-desktop
-vlc
-rpcs3AppImage
-mocktailPackage
-davinci-resolve
-neovim
-fish
-wget
-curl
-git
-# C compiler + tree-sitter CLI so nvim-treesitter can build parser grammars
-gcc
-tree-sitter
-# Rust toolchain
-cargo
-rustc
-clippy
-# Formatters for conform.nvim (format-on-save in neovim)
-stylua
-black
-rustfmt
-clang-tools
-shfmt
-nixfmt
-prettier
-# fd: fuzzy file search (telescope.nvim). lua: run lua via code_runner.
-# go: provides gofmt formatter + the go toolchain.
-fd
-lua
-go
-opencode
-nodejs_22
-fastfetch
-hyfetch
-btop
-fetchPackage
-foot
-wofi
-yambar
-librewolfDark
-  grim
-  slurp
-  # Wayland color picker (hyprpicker alternative). Copies the picked hex to the
-  # clipboard and works on wlroots compositors (mango), not just Hyprland.
-  wl-color-picker
-  wl-clipboard
-wf-recorder
-swaybg
-xdg-desktop-portal-wlr
-mako
-rofi
-waybar
-cava
-cmatrix
-lavat
-kitty
-tmux
-matugen
-# VSCodium: VS Code without Microsoft telemetry/tracking (same editor).
-vscodium
-libxcb-cursor
-unzip
-unrar
-p7zip
-audacity
-kdePackages.dolphin
-# Creative / office suite
-krita
-gimp
-libreoffice-fresh
-obs-studio
-wireplumber
-wlr-randr
-wdisplays
-brightnessctl
-efibootmgr
-jq
-socat
-  playerctl
-  # QEMU machine emulator + virtualizer (qemu-system-*, qemu-img).
-  qemu
-  # WoeUSB-ng: write a Windows ISO to a USB stick (handles Win11's >4GB
-  # install.wim via NTFS). Ventoy is the alternative but nixpkgs flags it
-  # insecure (untrusted binary blobs), so we use the open-source tool instead.
-  woeusb-ng
-  # woeusb-ng's runtime deps (mkntfs/mkfs.fat/wimlib). It doesn't declare them,
-  # so without these on PATH it dies with "mkntfs command not found".
-  ntfs3g
-  dosfstools
-  wimlib
-  (python3.withPackages (ps: with ps; [ flask pip ]))
-swaylock
-pavucontrol
-qbittorrent
-chres
-screenshot
-powermenu
-monitor-layout
-];
+  environment.systemPackages = with pkgs; [
+    ayugram-desktop
+    # tgt: Telegram TUI (github.com/FedericoBruzzone/tgt, from the tgt flake input).
+    tgtFixed
+    steamNvidia
+    wineWow64Packages.full
+    tailscale
+    # distrobox: run distro containers (Arch, etc.) on top of docker/podman
+    distrobox
+    #kdenlive video editor
+    kdePackages.kdenlive
+    # Lutris (FHS-wrapped) — runs the Battle.net / Blizzard launcher
+    lutris
+    # Prism Launcher (open-source Minecraft launcher)
+    prismlauncher
+    vesktop
+    spotify
+    # Proton Mail desktop app (official Electron client for Mail + Calendar)
+    protonmail-desktop
+    vlc
+    rpcs3AppImage
+    mocktailPackage
+    davinci-resolve
+    neovim
+    fish
+    wget
+    curl
+    git
+    # C compiler + tree-sitter CLI so nvim-treesitter can build parser grammars
+    gcc
+    tree-sitter
+    # Rust toolchain
+    cargo
+    rustc
+    clippy
+    # Formatters for conform.nvim (format-on-save in neovim)
+    stylua
+    black
+    rustfmt
+    clang-tools
+    shfmt
+    nixfmt
+    prettier
+    # fd: fuzzy file search (telescope.nvim). lua: run lua via code_runner.
+    # go: provides gofmt formatter + the go toolchain.
+    fd
+    lua
+    go
+    opencode
+    nodejs_22
+    fastfetch
+    hyfetch
+    btop
+    fetchPackage
+    foot
+    wofi
+    yambar
+    librewolfDark
+    grim
+    slurp
+    # Wayland color picker (hyprpicker alternative). Copies the picked hex to the
+    # clipboard and works on wlroots compositors (mango), not just Hyprland.
+    wl-color-picker
+    wl-clipboard
+    wf-recorder
+    swaybg
+    xdg-desktop-portal-wlr
+    mako
+    rofi
+    waybar
+    cava
+    cmatrix
+    lavat
+    kitty
+    tmux
+    matugen
+    # VSCodium: VS Code without Microsoft telemetry/tracking (same editor).
+    vscodium
+    libxcb-cursor
+    unzip
+    unrar
+    p7zip
+    audacity
+    kdePackages.dolphin
+    # Creative / office suite
+    krita
+    gimp
+    libreoffice-fresh
+    obs-studio
+    wireplumber
+    wlr-randr
+    wdisplays
+    brightnessctl
+    efibootmgr
+    jq
+    socat
+    playerctl
+    # QEMU machine emulator + virtualizer (qemu-system-*, qemu-img).
+    qemu
+    # WoeUSB-ng: write a Windows ISO to a USB stick (handles Win11's >4GB
+    # install.wim via NTFS). Ventoy is the alternative but nixpkgs flags it
+    # insecure (untrusted binary blobs), so we use the open-source tool instead.
+    woeusb-ng
+    # woeusb-ng's runtime deps (mkntfs/mkfs.fat/wimlib). It doesn't declare them,
+    # so without these on PATH it dies with "mkntfs command not found".
+    ntfs3g
+    dosfstools
+    wimlib
+    (python3.withPackages (
+      ps: with ps; [
+        flask
+        pip
+      ]
+    ))
+    swaylock
+    pavucontrol
+    qbittorrent
+    chres
+    screenshot
+    powermenu
+    monitor-layout
+  ];
 
+  # Iosevka Nerd Font (matches the kitty font from your dotfiles)
+  fonts.packages = [ pkgs.nerd-fonts.iosevka ];
+  # 1password
+  programs._1password.enable = true;
+  programs._1password-gui = {
+    enable = true;
+  };
 
-# Iosevka Nerd Font (matches the kitty font from your dotfiles)
-fonts.packages = [ pkgs.nerd-fonts.iosevka ];
-# 1password
-programs._1password.enable = true;
-programs._1password-gui = {
-  enable = true;
-};
+  # Mullvad VPN (GUI + CLI + systemd daemon). The service module installs the
+  # package, loads the `tun` module, and runs mullvad-daemon so `mullvad` CLI and
+  # the GUI can actually connect.
+  services.mullvad-vpn = {
+    enable = true;
+    package = pkgs.mullvad-vpn;
+  };
 
-# Mullvad VPN (GUI + CLI + systemd daemon). The service module installs the
-# package, loads the `tun` module, and runs mullvad-daemon so `mullvad` CLI and
-# the GUI can actually connect.
-services.mullvad-vpn = {
-  enable = true;
-  package = pkgs.mullvad-vpn;
-};
+  # Tailscale: WireGuard-based mesh VPN for a working virtual LAN (replaces the
+  # Wine-wrapped Radmin VPN, whose Windows TAP driver/service can't run under
+  # Wine). Enables the tailscaled daemon; authenticate once with `tailscale up`,
+  # then friends join your tailnet and reach your RPCS3 server at the 100.x IP.
+  services.tailscale.enable = true;
 
-# Tailscale: WireGuard-based mesh VPN for a working virtual LAN (replaces the
-# Wine-wrapped Radmin VPN, whose Windows TAP driver/service can't run under
-# Wine). Enables the tailscaled daemon; authenticate once with `tailscale up`,
-# then friends join your tailnet and reach your RPCS3 server at the 100.x IP.
-services.tailscale.enable = true;
+  # Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
+  # LSP servers like lua-language-server, rust-analyzer, clangd) find the Linux
+  # dynamic loader at /lib64/ld-linux-x86-64.so.2 and actually run on NixOS.
+  programs.nix-ld.enable = true;
 
-# Lets dynamically-linked binaries from outside nixpkgs (e.g. Mason-installed
-# LSP servers like lua-language-server, rust-analyzer, clangd) find the Linux
-# dynamic loader at /lib64/ld-linux-x86-64.so.2 and actually run on NixOS.
-programs.nix-ld.enable = true;
+  # mango (full-featured Wayland compositor, dwl-based). Config lives at
+  # ~/.config/mango/config.conf, deployed from the dotfiles repo (eonsdotfiles)
+  # by selecting a profile there:
+  #   dots config use mango   -> old mango rice (matugen/ore waybar)
+  #   dots config use mono    -> new rice (dwl monochrome look ported onto mango)
+  # This NixOS module only builds/installs the compositor; it does not manage
+  # the rice, so nixos-rebuild is identical for both states.
+  programs.mango.enable = true;
 
-# mango (full-featured Wayland compositor, dwl-based). Config lives at
-# ~/.config/mango/config.conf, deployed from the dotfiles repo (eonsdotfiles)
-# by selecting a profile there:
-#   dots config use mango   -> old mango rice (matugen/ore waybar)
-#   dots config use mono    -> new rice (dwl monochrome look ported onto mango)
-# This NixOS module only builds/installs the compositor; it does not manage
-# the rice, so nixos-rebuild is identical for both states.
-programs.mango.enable = true;
+  # Fallback so mango can start even before the dotfiles are deployed: install
+  # the package's default config to /etc/mango/config.conf. mango only reads it
+  # when ~/.config/mango/config.conf (the dotfiles rice) is absent.
+  environment.etc."mango/config.conf".source =
+    "${config.programs.mango.package}/etc/mango/config.conf";
 
-# Fallback so mango can start even before the dotfiles are deployed: install
-# the package's default config to /etc/mango/config.conf. mango only reads it
-# when ~/.config/mango/config.conf (the dotfiles rice) is absent.
-environment.etc."mango/config.conf".source = "${config.programs.mango.package}/etc/mango/config.conf";
+  # WayDroid: Linux-native Android container — the Linux stand-in for MuMu Player
+  # (which is Windows/macOS-only and has no Linux build). The NixOS module pulls
+  # the `waydroid` package from the pinned nixpkgs and drives the in-kernel binder
+  # (ANDROID_BINDER_IPC / ANDROID_BINDERFS / ANDROID_BINDER_DEVICES, already
+  # built-in in the NixOS kernel), so no out-of-tree kernel module is needed.
+  #
+  # Networking must use nftables: the nixos-26.05 kernel has dropped the legacy
+  # iptables tables (no ip_tables/iptable_filter/iptable_nat/iptable_mangle
+  # modules), so the default iptables-backed waydroid-net.sh fails with "Table
+  # does not exist". Enabling nftables makes the waydroid module build/use
+  # pkgs.waydroid-nftables (LXC_USE_NFT=1) and switches the system firewall to the
+  # working nftables backend too.
+  #
+  # After switch, initialise the Android image once with:
+  #   waydroid init -s GAPPS
+  # The ~1GB Android system/vendor images are fetched from WayDroid's mirrors at
+  # runtime, not via nixpkgs, so they aren't part of flake.lock.
+  virtualisation.waydroid.enable = true;
+  networking.nftables.enable = true;
 
-# WayDroid: Linux-native Android container — the Linux stand-in for MuMu Player
-# (which is Windows/macOS-only and has no Linux build). The NixOS module pulls
-# the `waydroid` package from the pinned nixpkgs and drives the in-kernel binder
-# (ANDROID_BINDER_IPC / ANDROID_BINDERFS / ANDROID_BINDER_DEVICES, already
-# built-in in the NixOS kernel), so no out-of-tree kernel module is needed.
-#
-# Networking must use nftables: the nixos-26.05 kernel has dropped the legacy
-# iptables tables (no ip_tables/iptable_filter/iptable_nat/iptable_mangle
-# modules), so the default iptables-backed waydroid-net.sh fails with "Table
-# does not exist". Enabling nftables makes the waydroid module build/use
-# pkgs.waydroid-nftables (LXC_USE_NFT=1) and switches the system firewall to the
-# working nftables backend too.
-#
-# After switch, initialise the Android image once with:
-#   waydroid init -s GAPPS
-# The ~1GB Android system/vendor images are fetched from WayDroid's mirrors at
-# runtime, not via nixpkgs, so they aren't part of flake.lock.
-virtualisation.waydroid.enable = true;
-networking.nftables.enable = true;
+  # libvirt + virt-manager: GUI frontend for QEMU/KVM. libvirtd is the management
+  # daemon; virt-manager connects to qemu:///system over it. The `eon` user is
+  # added to the `libvirtd` group so it can manage VMs without doas.
+  virtualisation.libvirtd.enable = true;
+  programs.virt-manager.enable = true;
 
-# libvirt + virt-manager: GUI frontend for QEMU/KVM. libvirtd is the management
-# daemon; virt-manager connects to qemu:///system over it. The `eon` user is
-# added to the `libvirtd` group so it can manage VMs without doas.
-virtualisation.libvirtd.enable = true;
-programs.virt-manager.enable = true;
+  # Docker for containers/distrobox — the clean way to run prebuilt Linux binaries
+  # (e.g. TheChoicerVoicer, which needs a glibc newer than 26.05 ships) on NixOS.
+  virtualisation.docker.enable = true;
 
-# Docker for containers/distrobox — the clean way to run prebuilt Linux binaries
-# (e.g. TheChoicerVoicer, which needs a glibc newer than 26.05 ships) on NixOS.
-virtualisation.docker.enable = true;
+  # Ollama: local LLM server at localhost:11434 (the module default host/port).
+  # ollama-cuda builds against CUDA so it runs on the NVIDIA dGPU; qwen3:14b is
+  # pulled once on boot by the ollama-model-loader service, so it's ready at the
+  # API without a manual `ollama pull`. The model weights are fetched from
+  # Ollama's registry at activation (not in flake.lock), but the *choice* is
+  # pinned here so a rebuild reproduces the same model.
+  services.ollama = {
+    enable = true;
+    package = pkgs.ollama-cuda;
+    loadModels = [
+      "qwen3:14b"
+      "qwen3:8b"
+    ];
+  };
 
-# Ollama: local LLM server at localhost:11434 (the module default host/port).
-# ollama-cuda builds against CUDA so it runs on the NVIDIA dGPU; qwen3:14b is
-# pulled once on boot by the ollama-model-loader service, so it's ready at the
-# API without a manual `ollama pull`. The model weights are fetched from
-# Ollama's registry at activation (not in flake.lock), but the *choice* is
-# pinned here so a rebuild reproduces the same model.
-services.ollama = {
-  enable = true;
-  package = pkgs.ollama-cuda;
-  loadModels = [ "qwen3:14b" "qwen3:8b" ];
-};
-
-# Minimal TUI login (no KDE/Qt bloat).
-services.greetd = {
-  enable = true;
-  useTextGreeter = true;
-  settings = {
-    default_session = {
-      user = "greeter";
-      command = "${pkgs.tuigreet}/bin/tuigreet --time --sessions ${sessionsDir} --cmd ${config.programs.mango.package}/bin/mango";
+  # Minimal TUI login (no KDE/Qt bloat).
+  services.greetd = {
+    enable = true;
+    useTextGreeter = true;
+    settings = {
+      default_session = {
+        user = "greeter";
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --sessions ${sessionsDir} --cmd ${config.programs.mango.package}/bin/mango";
+      };
     };
   };
-};
 
-# Window Maker (X11). Launch with `startx` from a TTY (Ctrl+Alt+F2, login, startx).
-services.xserver = {
-  enable = true;
-  windowManager.windowmaker.enable = true;
-  displayManager.startx.enable = true;
-};
+  # Window Maker (X11). Launch with `startx` from a TTY (Ctrl+Alt+F2, login, startx).
+  services.xserver = {
+    enable = true;
+    windowManager.windowmaker.enable = true;
+    displayManager.startx.enable = true;
+  };
 
-# System-wide dark theme. nixpkgs 26.05 removed the old `gtk.theme` module, so
-# GTK is themed through the XDG settings files it reads from /etc/xdg (plus
-# GTK_THEME for GTK3 apps that skip settings.ini). Qt uses the adwaita-dark
-# style so Qt apps match (dolphin, krita, vlc, obs, qbittorrent, etc.).
-# No `platformTheme = "gnome"` — that drags in qgnomeplatform, a GNOME-specific
-# Qt bridge that does nothing on a wlroots compositor.
-environment.variables.GTK_THEME = "Adwaita:dark";
-environment.etc."xdg/gtk-3.0/settings.ini".text = ''
-  [Settings]
-  gtk-theme-name=Adwaita-dark
-  gtk-application-prefer-dark-theme=1
-'';
-environment.etc."xdg/gtk-4.0/settings.ini".text = ''
-  [Settings]
-  gtk-theme-name=Adwaita-dark
-  gtk-application-prefer-dark-theme=1
-'';
-qt = {
-  enable = true;
-  style = "adwaita-dark";
-};
+  # System-wide dark theme. nixpkgs 26.05 removed the old `gtk.theme` module, so
+  # GTK is themed through the XDG settings files it reads from /etc/xdg (plus
+  # GTK_THEME for GTK3 apps that skip settings.ini). Qt uses the adwaita-dark
+  # style so Qt apps match (dolphin, krita, vlc, obs, qbittorrent, etc.).
+  # No `platformTheme = "gnome"` — that drags in qgnomeplatform, a GNOME-specific
+  # Qt bridge that does nothing on a wlroots compositor.
+  environment.variables.GTK_THEME = "Adwaita:dark";
+  environment.etc."xdg/gtk-3.0/settings.ini".text = ''
+    [Settings]
+    gtk-theme-name=Adwaita-dark
+    gtk-application-prefer-dark-theme=1
+  '';
+  environment.etc."xdg/gtk-4.0/settings.ini".text = ''
+    [Settings]
+    gtk-theme-name=Adwaita-dark
+    gtk-application-prefer-dark-theme=1
+  '';
+  qt = {
+    enable = true;
+    style = "adwaita-dark";
+  };
 
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   # Use the Limine bootloader, installed to the removable path
   # (EFI/BOOT/BOOTX64.EFI). canTouchEfiVariables is left off so the installer
@@ -623,7 +648,11 @@ qt = {
   systemd.user.services.vlc-pcm-decode = {
     description = "Force VLC to decode surround audio to PCM";
     wantedBy = [ "default.target" ];
-    path = [ pkgs.coreutils pkgs.gnused pkgs.gnugrep ];
+    path = [
+      pkgs.coreutils
+      pkgs.gnused
+      pkgs.gnugrep
+    ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = pkgs.writeShellScript "vlc-pcm-decode" ''
@@ -726,7 +755,12 @@ qt = {
   users.users."eon" = {
     isNormalUser = true;
     description = "eon";
-    extraGroups = [ "networkmanager" "wheel" "libvirtd" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "libvirtd"
+      "docker"
+    ];
     hashedPasswordFile = config.age.secrets."eon-password".path;
     shell = pkgs.fish;
   };
@@ -747,19 +781,20 @@ qt = {
   # Allow only the specific unfree packages this system needs, instead of
   # blanket `allowUnfree = true`, so a new unfree dependency is caught at build
   # time rather than silently accepted.
-  nixpkgs.config.allowUnfreePredicate = pkg:
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
     builtins.elem (lib.getName pkg) [
-      "steam"           # client + Proton
+      "steam" # client + Proton
       "steam-unwrapped" # the unfree client payload behind `steam`
       "spotify"
       "unrar"
-      "nvidia-x11"            # proprietary NVIDIA driver (hardware.nvidia)
-      "nvidia-settings"       # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
+      "nvidia-x11" # proprietary NVIDIA driver (hardware.nvidia)
+      "nvidia-settings" # NVIDIA control panel (hardware.nvidia.nvidiaSettings)
       "nvidia-kernel-modules" # driver kernel modules
-      "nvidia-firmware"       # GSP firmware
-      "1password"     # _1password-gui
+      "nvidia-firmware" # GSP firmware
+      "1password" # _1password-gui
       "1password-cli" # _1password-cli
-      "mocktail"      # Roblox client (local derivation)
+      "mocktail" # Roblox client (local derivation)
       "davinci-resolve" # video editor (Blackmagic, free edition)
     ]
     # ollama-cuda pulls the CUDA toolkit (cudart, cublas, ...), all of which
@@ -768,7 +803,10 @@ qt = {
     || lib.any (l: (l.shortName or "") == "CUDA EULA") (lib.toList (pkg.meta.license or [ ]));
 
   # Enable flakes + the new CLI, so this config itself builds via `nixos-rebuild --flake`.
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   # Allow the binary cache. `substitute = false` (build-everything-from-source)
   # made every nixpkgs bump recompile gcc/glibc/binutils and re-fetch their
@@ -793,11 +831,13 @@ qt = {
   security.sudo.enable = false;
   security.doas = {
     enable = true;
-    extraRules = [{
-      groups = [ "wheel" ];
-      keepEnv = true;
-      persist = true;
-    }];
+    extraRules = [
+      {
+        groups = [ "wheel" ];
+        keepEnv = true;
+        persist = true;
+      }
+    ];
   };
 
   # Stamp the exact config commit into the built system, so `nixos-version`
